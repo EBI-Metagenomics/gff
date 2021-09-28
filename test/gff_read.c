@@ -37,6 +37,9 @@ void test_read_empty(void)
     fclose(fd);
 }
 
+static enum gff_elem_type ex1_type[] = {GFF_VERSION, GFF_FEATURE, GFF_FEATURE,
+                                        GFF_FEATURE};
+
 static char *mix_id[] = {"LCBO", "MCHU", "gi|5524211|gb|AAD44166.1|",
                          "gi|5524211|gb|AAD44166.1|"};
 
@@ -73,6 +76,7 @@ void test_read_example1(void)
     enum gff_rc rc = GFF_SUCCESS;
     while (!(rc = gff_read(&gff)))
     {
+        EQ(gff.elem.type, ex1_type[i]);
         /* EQ(gff.target.id, mix_id[i]); */
         /* EQ(gff.target.desc, mix_desc[i]); */
         /* EQ(gff.target.seq, mix_seq[i]); */
