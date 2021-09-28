@@ -10,8 +10,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define GFF_MATCH_EXCESS_SIZE 5
-
 struct args
 {
     struct gff_tok *tok;
@@ -232,8 +230,21 @@ static enum gff_rc read_region(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
     struct gff_region *r = &a->elem->region;
+    gff_region_init(r);
+
     enum gff_rc rc = tokcpy(r->buffer, a->tok, GFF_REGION_SIZE, "version");
     if (rc) return rc;
+
+    r->name = r->buffer;
+    char *pos = strchr(r->name, ' ');
+    if (pos == NULL)
+        return error_parse(a->tok->error, a->tok->line.number, "missing space");
+    r->start = pos + 1;
+    pos = strchr(r->start, ' ');
+    if (pos == NULL)
+        return error_parse(a->tok->error, a->tok->line.number, "missing space");
+    r->end = pos + 1;
+
     return rc;
 }
 
@@ -241,6 +252,13 @@ static enum gff_rc set_version_type(struct args *a)
 {
     assert(a->tok->id == TOK_NL);
     a->elem->type = GFF_VERSION;
+    return GFF_SUCCESS;
+}
+
+static enum gff_rc set_region_type(struct args *a)
+{
+    assert(a->tok->id == TOK_NL);
+    a->elem->type = GFF_REGION;
     return GFF_SUCCESS;
 }
 

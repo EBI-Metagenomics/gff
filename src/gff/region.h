@@ -17,27 +17,20 @@ struct gff_region
     {
         struct
         {
-            char name[GFF_REGION_NAME_SIZE];
-            char start[GFF_REGION_START_SIZE];
-            char end[GFF_REGION_END_SIZE];
+            char *name;
+            char *start;
+            char *end;
         };
         char buffer[GFF_REGION_SIZE];
     };
 };
 
-static_assert(offsetof(struct gff_region, name) == 0, "disallow padding");
-static_assert(offsetof(struct gff_region, start) == GFF_REGION_NAME_SIZE,
-              "disallow padding");
-static_assert(offsetof(struct gff_region, end) ==
-                  GFF_REGION_NAME_SIZE + GFF_REGION_START_SIZE,
-              "disallow padding");
-static_assert(offsetof(struct gff_region, buffer) == 0, "disallow padding");
-
 static inline void gff_region_init(struct gff_region *region)
 {
-    region->name[0] = '\0';
-    region->start[0] = '\0';
-    region->end[0] = '\0';
+    region->name = NULL;
+    region->start = NULL;
+    region->end = NULL;
+    region->buffer[0] = '\0';
 }
 
 #endif
