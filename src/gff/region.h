@@ -13,21 +13,18 @@
 
 struct gff_region
 {
-    union
+    struct
     {
-        struct
-        {
-            char *name;
-            char *start;
-            char *end;
-        };
-        char buffer[GFF_REGION_SIZE];
+        char const *name;
+        char const *start;
+        char const *end;
     };
+    char buffer[GFF_REGION_SIZE];
 };
 
 static inline void gff_region_init(struct gff_region *region)
 {
-    region->name = NULL;
+    region->name = region->buffer;
     region->start = NULL;
     region->end = NULL;
     region->buffer[0] = '\0';

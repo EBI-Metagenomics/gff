@@ -68,9 +68,6 @@ static enum gff_rc unexpect_nl(struct args *a)
 
 static enum gff_rc read_version(struct args *a);
 static enum gff_rc read_region(struct args *a);
-static enum gff_rc set_version_type(struct args *a);
-static enum gff_rc set_region_type(struct args *a);
-static enum gff_rc set_feature_type(struct args *a);
 static enum gff_rc read_feat_seqid(struct args *a);
 static enum gff_rc read_feat_source(struct args *a);
 static enum gff_rc read_feat_type(struct args *a);
@@ -80,6 +77,9 @@ static enum gff_rc read_feat_score(struct args *a);
 static enum gff_rc read_feat_strand(struct args *a);
 static enum gff_rc read_feat_phase(struct args *a);
 static enum gff_rc read_feat_attrs(struct args *a);
+static enum gff_rc set_version_type(struct args *a);
+static enum gff_rc set_region_type(struct args *a);
+static enum gff_rc set_feature_type(struct args *a);
 
 static struct trans const transition[][6] = {
     [STATE_BEGIN] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -232,14 +232,14 @@ static enum gff_rc read_region(struct args *a)
     struct gff_region *r = &a->elem->region;
     gff_region_init(r);
 
-    enum gff_rc rc = tokcpy(r->buffer, a->tok, GFF_REGION_SIZE, "version");
+    enum gff_rc rc = tokcpy(r->buffer, a->tok, GFF_REGION_SIZE, "region");
     if (rc) return rc;
 
-    r->name = r->buffer;
     char *pos = strchr(r->name, ' ');
     if (pos == NULL)
         return error_parse(a->tok->error, a->tok->line.number, "missing space");
     r->start = pos + 1;
+
     pos = strchr(r->start, ' ');
     if (pos == NULL)
         return error_parse(a->tok->error, a->tok->line.number, "missing space");
