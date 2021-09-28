@@ -16,12 +16,21 @@ enum gff_mode
     GFF_WRITE,
 };
 
+enum gff_elem
+{
+    GFF_UNKNOWN,
+    GFF_VERSION,
+    GFF_REGION,
+    GFF_FEATURE,
+};
+
 #define GFF_VERSION_SIZE 16
 
 struct gff
 {
     FILE *restrict fd;
     enum gff_mode mode;
+    enum gff_elem elem;
     char version[GFF_VERSION_SIZE];
     struct gff_region region;
     struct gff_feature feature;
