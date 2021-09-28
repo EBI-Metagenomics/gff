@@ -4,9 +4,9 @@
 #include "gff/aux.h"
 #include "gff/error.h"
 #include "gff/export.h"
+#include "gff/feature.h"
 #include "gff/rc.h"
 #include "gff/region.h"
-#include "gff/target.h"
 #include "gff/tok.h"
 #include <stdio.h>
 
@@ -24,8 +24,7 @@ struct gff
     enum gff_mode mode;
     char version[GFF_VERSION_SIZE];
     struct gff_region region;
-    struct gff_target target;
-    struct __gff_target buffer;
+    struct gff_feature feature;
     unsigned state;
     struct gff_tok tok;
     struct gff_aux aux;
