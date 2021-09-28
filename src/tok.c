@@ -48,8 +48,15 @@ enum gff_rc tok_next(struct gff_tok *tok, FILE *restrict fd)
 
     if (!strcmp(tok->value, "\n"))
         tok->id = TOK_NL;
-    else if (*tok->value == '>')
-        tok->id = TOK_ID;
+    else if (tok->value[0] == '#' && tok->value[1] == '#')
+    {
+        if (!strcmp(tok->value, "##gff-version"))
+            tok->id = TOK_VERSION;
+        else if (!strcmp(tok->value, "##sequence-region"))
+            tok->id = TOK_REGION;
+        else
+            tok->id = TOK_PRAGMA;
+    }
     else
         tok->id = TOK_WORD;
 

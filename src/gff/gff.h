@@ -2,11 +2,10 @@
 #define GFF_GFF_H
 
 #include "gff/aux.h"
+#include "gff/elem.h"
 #include "gff/error.h"
 #include "gff/export.h"
-#include "gff/feature.h"
 #include "gff/rc.h"
-#include "gff/region.h"
 #include "gff/tok.h"
 #include <stdio.h>
 
@@ -16,24 +15,11 @@ enum gff_mode
     GFF_WRITE,
 };
 
-enum gff_elem
-{
-    GFF_UNKNOWN,
-    GFF_VERSION,
-    GFF_REGION,
-    GFF_FEATURE,
-};
-
-#define GFF_VERSION_SIZE 16
-
 struct gff
 {
     FILE *restrict fd;
     enum gff_mode mode;
-    enum gff_elem elem;
-    char version[GFF_VERSION_SIZE];
-    struct gff_region region;
-    struct gff_feature feature;
+    struct gff_elem elem;
     unsigned state;
     struct gff_tok tok;
     struct gff_aux aux;

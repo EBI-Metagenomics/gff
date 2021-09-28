@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#define GFF_TOK_LINE_MAX 256
+#define GFF_TOK_LINE_MAX 512
 
 struct gff_tok
 {

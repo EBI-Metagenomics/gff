@@ -24,4 +24,17 @@ struct gff_feature
     char attrs[GFF_FEATURE_ATTRS_SIZE];
 };
 
+static inline void gff_feature_init(struct gff_feature *feature)
+{
+    feature->seqid[0] = '\0';
+    feature->source[0] = '\0';
+    feature->type[0] = '\0';
+    feature->start[0] = '\0';
+    feature->end[0] = '\0';
+    feature->score[0] = '\0';
+    feature->strand[0] = '\0';
+    feature->phase[0] = '\0';
+    feature->attrs[0] = '\0';
+}
+
 #endif
