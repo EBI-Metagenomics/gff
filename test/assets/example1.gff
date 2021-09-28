@@ -1,0 +1,3 @@
+##gff-version 3
+AE014075.1:190-252|dna	iseq	.	1	63	0.0	+	.	ID=item1;Target_alph=dna;Profile_name=Leader_Thr;Profile_alph=dna;Profile_acc=PF08254.12;Window=0;Bias=17.5;E-value=2.9e-14;Epsilon=0.01;Score=38.8
+AE014075.1:534-908|dna	iseq	.	1	306	0.0	+	.	ID=item2;Target_alph=dna;Profile_name=Y1_Tnp;Profile_alph=dna;Profile_acc=PF01797.17;Window=0;Bias=0.0;E-value=1.7e-29;Epsilon=0.01;Score=88.6

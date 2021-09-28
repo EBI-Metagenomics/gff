@@ -1,0 +1,27 @@
+#ifndef GFF_FEATURE_H
+#define GFF_FEATURE_H
+
+#define GFF_FEATURE_SEQID_SIZE 64
+#define GFF_FEATURE_SOURCE_SIZE 64
+#define GFF_FEATURE_TYPE_SIZE 64
+#define GFF_FEATURE_START_SIZE 64
+#define GFF_FEATURE_END_SIZE 64
+#define GFF_FEATURE_SCORE_SIZE 64
+#define GFF_FEATURE_STRAND_SIZE 64
+#define GFF_FEATURE_PHASE_SIZE 64
+#define GFF_FEATURE_ATTRS_SIZE 64
+
+struct gff_feature
+{
+    char seqid[GFF_FEATURE_SEQID_SIZE];
+    char source[GFF_FEATURE_SOURCE_SIZE];
+    char type[GFF_FEATURE_TYPE_SIZE];
+    char start[GFF_FEATURE_START_SIZE];
+    char end[GFF_FEATURE_END_SIZE];
+    char score[GFF_FEATURE_SCORE_SIZE];
+    char strand[GFF_FEATURE_STRAND_SIZE];
+    char phase[GFF_FEATURE_PHASE_SIZE];
+    char attrs[GFF_FEATURE_ATTRS_SIZE];
+};
+
+#endif
