@@ -260,7 +260,7 @@ void test_read_example5(void)
 
         i++;
     }
-    EQ(i, 2);
+    EQ(i, 3);
     EQ(rc, GFF_ENDFILE);
 
     fclose(fd);
