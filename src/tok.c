@@ -48,6 +48,8 @@ enum gff_rc tok_next(struct gff_tok *tok, FILE *restrict fd)
 
     if (!strcmp(tok->value, "\n"))
         tok->id = TOK_NL;
+    else if (tok->value[0] == '#' && tok->value[1] == '\0')
+        tok->id = TOK_COMMENT;
     else if (tok->value[0] == '#' && tok->value[1] == '#')
     {
         if (!strcmp(tok->value, "##gff-version"))

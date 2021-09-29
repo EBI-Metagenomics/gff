@@ -5,6 +5,7 @@ void test_read_empty(void);
 void test_read_example1(void);
 void test_read_example3(void);
 void test_read_example4(void);
+void test_read_example5(void);
 void test_read_damaged1(void);
 void test_read_damaged2(void);
 void test_read_damaged3(void);
@@ -15,6 +16,7 @@ int main(void)
     test_read_example1();
     test_read_example3();
     test_read_example4();
+    test_read_example5();
     test_read_damaged1();
     test_read_damaged2();
     test_read_damaged3();
@@ -117,6 +119,18 @@ static struct gff_feature ex4_feature[23] = {
     (struct gff_feature){"ctg123", ".", "CDS", "7000", "7600", ".", "+", "1",
                          "ID=cds00004;Parent=mRNA00003;Name=edenprotein.4"}};
 
+static enum gff_elem_type ex5_type[3] = {
+    GFF_VERSION,
+    GFF_FEATURE,
+    GFF_FEATURE,
+};
+
+static struct gff_feature ex5_feature[2] = {
+    (struct gff_feature){"J02448", "GenBank", "region", "1", "6407", ".", "+",
+                         ".", "ID=J02448;Name=J02448;Is_circular=true;"},
+    (struct gff_feature){"J02448", "GenBank", "CDS", "6006", "7238", ".", "+",
+                         "0", "ID=geneII;Name=II;Note=protein II;"}};
+
 static void eq_feat(struct gff_feature const *actual,
                     struct gff_feature const *desired)
 {
@@ -217,6 +231,36 @@ void test_read_example4(void)
         i++;
     }
     EQ(i, 25);
+    EQ(rc, GFF_ENDFILE);
+
+    fclose(fd);
+}
+
+void test_read_example5(void)
+{
+    FILE *fd = fopen(ASSETS "/example5.gff", "r");
+    NOTNULL(fd);
+
+    struct gff gff;
+    gff_init(&gff, fd, GFF_READ);
+
+    unsigned i = 0;
+    unsigned i_feat = 0;
+    enum gff_rc rc = GFF_SUCCESS;
+    while (!(rc = gff_read(&gff)))
+    {
+        EQ(gff.elem.type, ex5_type[i]);
+
+        if (gff.elem.type == GFF_VERSION)
+            EQ(gff.elem.version, "3.1.26");
+        else if (gff.elem.type == GFF_FEATURE)
+            eq_feat(&gff.elem.feature, &ex5_feature[i_feat++]);
+        else
+            COND(false);
+
+        i++;
+    }
+    EQ(i, 4);
     EQ(rc, GFF_ENDFILE);
 
     fclose(fd);

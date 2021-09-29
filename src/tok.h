@@ -9,6 +9,7 @@ struct gff_tok;
 enum tok_id
 {
     TOK_NL,
+    TOK_COMMENT,
     TOK_PRAGMA,
     TOK_VERSION,
     TOK_REGION,
