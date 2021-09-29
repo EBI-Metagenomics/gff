@@ -25,12 +25,33 @@ struct gff
     char error[GFF_ERROR_SIZE];
 };
 
-GFF_API void gff_init(struct gff *fa, FILE *restrict fd, enum gff_mode mode);
+GFF_API void gff_init(struct gff *gff, FILE *restrict fd, enum gff_mode mode);
 
-GFF_API enum gff_rc gff_read(struct gff *fa);
+GFF_API enum gff_rc gff_read(struct gff *gff);
 
-GFF_API void gff_clearerr(struct gff *fa);
+GFF_API void gff_clearerr(struct gff *gff);
 
-GFF_API enum gff_rc gff_write(struct gff *fa, struct gff_elem const *elem);
+GFF_API enum gff_rc gff_write(struct gff *gff);
+
+static inline void gff_set_version(struct gff *gff)
+{
+    gff->elem.type = GFF_VERSION;
+    gff->elem.version[0] = '3';
+    gff->elem.version[1] = '\0';
+}
+
+static inline struct gff_region *gff_set_region(struct gff *gff)
+{
+    gff->elem.type = GFF_REGION;
+    gff_region_init(&gff->elem.region);
+    return &gff->elem.region;
+}
+
+static inline struct gff_feature *gff_set_feature(struct gff *gff)
+{
+    gff->elem.type = GFF_FEATURE;
+    gff_feature_init(&gff->elem.feature);
+    return &gff->elem.feature;
+}
 
 #endif

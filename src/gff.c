@@ -51,13 +51,13 @@ enum gff_rc write_version(struct gff *gff);
 enum gff_rc write_region(struct gff *gff, struct gff_region const *region);
 enum gff_rc write_feature(struct gff *gff, struct gff_feature const *feat);
 
-enum gff_rc gff_write(struct gff *gff, struct gff_elem const *elem)
+enum gff_rc gff_write(struct gff *gff)
 {
-    if (elem->type == GFF_REGION)
-        return write_region(gff, &elem->region);
-    else if (elem->type == GFF_FEATURE)
-        return write_feature(gff, &elem->feature);
-    else if (elem->type == GFF_VERSION)
+    if (gff->elem.type == GFF_REGION)
+        return write_region(gff, &gff->elem.region);
+    else if (gff->elem.type == GFF_FEATURE)
+        return write_feature(gff, &gff->elem.feature);
+    else if (gff->elem.type == GFF_VERSION)
         return write_version(gff);
     return error_illegalarg(gff->error, "gff_unknown element type");
 }
