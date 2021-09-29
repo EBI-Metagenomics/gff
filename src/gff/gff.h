@@ -1,7 +1,6 @@
 #ifndef GFF_GFF_H
 #define GFF_GFF_H
 
-#include "gff/aux.h"
 #include "gff/elem.h"
 #include "gff/error.h"
 #include "gff/export.h"
@@ -22,7 +21,6 @@ struct gff
     struct gff_elem elem;
     unsigned state;
     struct gff_tok tok;
-    struct gff_aux aux;
     char error[GFF_ERROR_SIZE];
 };
 
@@ -32,7 +30,6 @@ GFF_API enum gff_rc gff_read(struct gff *fa);
 
 GFF_API void gff_clearerr(struct gff *fa);
 
-GFF_API enum gff_rc gff_write(struct gff *fa, struct gff_target tgt,
-                              unsigned ncols);
+GFF_API enum gff_rc gff_write(struct gff *fa, struct gff_elem *elem);
 
 #endif
