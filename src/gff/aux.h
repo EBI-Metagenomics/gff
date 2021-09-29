@@ -5,10 +5,7 @@
 
 struct gff_aux
 {
-    char *begin;
     char *pos;
-    char *end;
-    char id[GFF_ID_MAX];
 };
 
 #endif

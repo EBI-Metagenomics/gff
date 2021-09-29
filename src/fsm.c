@@ -1,5 +1,4 @@
 #include "fsm.h"
-#include "aux.h"
 #include "error.h"
 #include "gff/aux.h"
 #include "gff/elem.h"
@@ -76,15 +75,16 @@ static enum gff_rc read_version(struct args *a);
 static enum gff_rc read_region_name(struct args *a);
 static enum gff_rc read_region_start(struct args *a);
 static enum gff_rc read_region_end(struct args *a);
-static enum gff_rc read_feat_seqid(struct args *a);
-static enum gff_rc read_feat_source(struct args *a);
-static enum gff_rc read_feat_type(struct args *a);
-static enum gff_rc read_feat_start(struct args *a);
-static enum gff_rc read_feat_end(struct args *a);
-static enum gff_rc read_feat_score(struct args *a);
-static enum gff_rc read_feat_strand(struct args *a);
-static enum gff_rc read_feat_phase(struct args *a);
-static enum gff_rc read_feat_attrs(struct args *a);
+static enum gff_rc read_seqid(struct args *a);
+static enum gff_rc read_source(struct args *a);
+static enum gff_rc read_type(struct args *a);
+static enum gff_rc read_start(struct args *a);
+static enum gff_rc read_end(struct args *a);
+static enum gff_rc read_score(struct args *a);
+static enum gff_rc read_strand(struct args *a);
+static enum gff_rc read_phase(struct args *a);
+static enum gff_rc read_attrs_init(struct args *a);
+static enum gff_rc read_attrs_cont(struct args *a);
 static enum gff_rc set_version_type(struct args *a);
 static enum gff_rc set_region_type(struct args *a);
 static enum gff_rc set_feature_type(struct args *a);
@@ -123,7 +123,7 @@ static struct trans const transition[][7] = {
                            [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                            [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                            [TOK_REGION] = {STATE_REGION_NAME, &nop},
-                           [TOK_WORD] = {STATE_FEAT_SOURCE, &read_feat_seqid},
+                           [TOK_WORD] = {STATE_FEAT_SOURCE, &read_seqid},
                            [TOK_EOF] = {STATE_END, &nop}},
     [STATE_REGION_NAME] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
                            [TOK_COMMENT] = {STATE_ERROR, &unexpect_comment},
@@ -158,70 +158,72 @@ static struct trans const transition[][7] = {
                            [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                            [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                            [TOK_REGION] = {STATE_ERROR, &unexpect_region},
-                           [TOK_WORD] = {STATE_FEAT_TYPE, &read_feat_source},
+                           [TOK_WORD] = {STATE_FEAT_TYPE, &read_source},
                            [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_TYPE] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
                          [TOK_COMMENT] = {STATE_ERROR, &unexpect_comment},
                          [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                          [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                          [TOK_REGION] = {STATE_ERROR, &unexpect_region},
-                         [TOK_WORD] = {STATE_FEAT_START, &read_feat_type},
+                         [TOK_WORD] = {STATE_FEAT_START, &read_type},
                          [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_START] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
                           [TOK_COMMENT] = {STATE_ERROR, &unexpect_comment},
                           [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                           [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                           [TOK_REGION] = {STATE_ERROR, &unexpect_region},
-                          [TOK_WORD] = {STATE_FEAT_END, &read_feat_start},
+                          [TOK_WORD] = {STATE_FEAT_END, &read_start},
                           [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_END] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
                         [TOK_COMMENT] = {STATE_ERROR, &unexpect_comment},
                         [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                         [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                         [TOK_REGION] = {STATE_ERROR, &unexpect_region},
-                        [TOK_WORD] = {STATE_FEAT_SCORE, &read_feat_end},
+                        [TOK_WORD] = {STATE_FEAT_SCORE, &read_end},
                         [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_SCORE] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
                           [TOK_COMMENT] = {STATE_ERROR, &unexpect_comment},
                           [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                           [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                           [TOK_REGION] = {STATE_ERROR, &unexpect_region},
-                          [TOK_WORD] = {STATE_FEAT_STRAND, &read_feat_score},
+                          [TOK_WORD] = {STATE_FEAT_STRAND, &read_score},
                           [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_STRAND] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
                            [TOK_COMMENT] = {STATE_ERROR, &unexpect_comment},
                            [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                            [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                            [TOK_REGION] = {STATE_ERROR, &unexpect_region},
-                           [TOK_WORD] = {STATE_FEAT_PHASE, &read_feat_strand},
+                           [TOK_WORD] = {STATE_FEAT_PHASE, &read_strand},
                            [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_PHASE] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
                           [TOK_COMMENT] = {STATE_ERROR, &unexpect_comment},
                           [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                           [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                           [TOK_REGION] = {STATE_ERROR, &unexpect_region},
-                          [TOK_WORD] = {STATE_FEAT_ATTRS, &read_feat_phase},
+                          [TOK_WORD] = {STATE_FEAT_ATTRS_INIT, &read_phase},
                           [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
-    [STATE_FEAT_ATTRS] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
-                          [TOK_COMMENT] = {STATE_ERROR, &unexpect_comment},
-                          [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
-                          [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
-                          [TOK_REGION] = {STATE_ERROR, &unexpect_region},
-                          [TOK_WORD] = {STATE_FEAT_NL, &read_feat_attrs},
-                          [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
-    [STATE_FEAT_NL] = {[TOK_NL] = {STATE_PAUSE, &set_feature_type},
-                       [TOK_COMMENT] = {STATE_ERROR, &unexpect_comment},
-                       [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
-                       [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
-                       [TOK_REGION] = {STATE_ERROR, &unexpect_region},
-                       [TOK_WORD] = {STATE_ERROR, &unexpect_tok},
-                       [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
+    [STATE_FEAT_ATTRS_INIT] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
+                               [TOK_COMMENT] = {STATE_ERROR, &unexpect_comment},
+                               [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
+                               [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
+                               [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                               [TOK_WORD] = {STATE_FEAT_ATTRS_CONT,
+                                             &read_attrs_init},
+                               [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
+    [STATE_FEAT_ATTRS_CONT] = {[TOK_NL] = {STATE_PAUSE, &set_feature_type},
+                               [TOK_COMMENT] = {STATE_ERROR, &unexpect_comment},
+                               [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
+                               [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
+                               [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                               [TOK_WORD] = {STATE_FEAT_ATTRS_CONT,
+                                             &read_attrs_cont},
+                               [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_PAUSE] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
                      [TOK_COMMENT] = {STATE_COMMENT, &nop},
                      [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                      [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                      [TOK_REGION] = {STATE_REGION_NAME, &nop},
-                     [TOK_WORD] = {STATE_FEAT_SOURCE, &read_feat_seqid},
+                     [TOK_WORD] = {STATE_FEAT_SOURCE, &read_seqid},
                      [TOK_EOF] = {STATE_END, &nop}},
     [STATE_END] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
                    [TOK_COMMENT] = {STATE_ERROR, &unexpect_comment},
@@ -255,8 +257,8 @@ static char state_name[][16] = {[STATE_BEGIN] = "BEGIN",
                                 [STATE_FEAT_SCORE] = "FEAT_SCORE",
                                 [STATE_FEAT_STRAND] = "FEAT_STRAND",
                                 [STATE_FEAT_PHASE] = "FEAT_PHASE",
-                                [STATE_FEAT_ATTRS] = "FEAT_ATTRS",
-                                [STATE_FEAT_NL] = "FEAT_NL",
+                                [STATE_FEAT_ATTRS_INIT] = "FEAT_ATTRS_INIT",
+                                [STATE_FEAT_ATTRS_CONT] = "FEAT_ATTRS_CONT",
                                 [STATE_PAUSE] = "PAUSE",
                                 [STATE_END] = "END",
                                 [STATE_ERROR] = "ERROR"};
@@ -274,6 +276,8 @@ enum state fsm_next(enum state state, struct gff_tok *tok, struct gff_aux *aux,
 
 char const *fsm_name(enum state state) { return state_name[state]; }
 
+static enum gff_rc tokcpy0(char *dst, struct gff_tok *tok, size_t count,
+                           char const *name, char **ptr);
 static enum gff_rc tokcpy(char *dst, struct gff_tok *tok, size_t count,
                           char const *name);
 
@@ -335,76 +339,94 @@ static enum gff_rc set_feature_type(struct args *a)
     return GFF_SUCCESS;
 }
 
-static enum gff_rc read_feat_seqid(struct args *a)
+static enum gff_rc read_seqid(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
     struct gff_feature *f = &a->elem->feature;
     return tokcpy(f->seqid, a->tok, GFF_FEATURE_SEQID_SIZE, "seqid");
 }
 
-static enum gff_rc read_feat_source(struct args *a)
+static enum gff_rc read_source(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
     struct gff_feature *f = &a->elem->feature;
     return tokcpy(f->source, a->tok, GFF_FEATURE_SOURCE_SIZE, "source");
 }
 
-static enum gff_rc read_feat_type(struct args *a)
+static enum gff_rc read_type(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
     struct gff_feature *f = &a->elem->feature;
     return tokcpy(f->type, a->tok, GFF_FEATURE_TYPE_SIZE, "type");
 }
 
-static enum gff_rc read_feat_start(struct args *a)
+static enum gff_rc read_start(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
     struct gff_feature *f = &a->elem->feature;
     return tokcpy(f->start, a->tok, GFF_FEATURE_START_SIZE, "start");
 }
 
-static enum gff_rc read_feat_end(struct args *a)
+static enum gff_rc read_end(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
     struct gff_feature *f = &a->elem->feature;
     return tokcpy(f->end, a->tok, GFF_FEATURE_END_SIZE, "end");
 }
 
-static enum gff_rc read_feat_score(struct args *a)
+static enum gff_rc read_score(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
     struct gff_feature *f = &a->elem->feature;
     return tokcpy(f->score, a->tok, GFF_FEATURE_SCORE_SIZE, "score");
 }
 
-static enum gff_rc read_feat_strand(struct args *a)
+static enum gff_rc read_strand(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
     struct gff_feature *f = &a->elem->feature;
     return tokcpy(f->strand, a->tok, GFF_FEATURE_STRAND_SIZE, "strand");
 }
 
-static enum gff_rc read_feat_phase(struct args *a)
+static enum gff_rc read_phase(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
     struct gff_feature *f = &a->elem->feature;
     return tokcpy(f->phase, a->tok, GFF_FEATURE_PHASE_SIZE, "phase");
 }
 
-static enum gff_rc read_feat_attrs(struct args *a)
+static enum gff_rc read_attrs_init(struct args *a)
+{
+    assert(a->tok->id == TOK_WORD);
+    a->aux->pos = a->elem->feature.attrs;
+    struct gff_feature *f = &a->elem->feature;
+    return tokcpy0(f->attrs, a->tok, GFF_FEATURE_ATTRS_SIZE, "attributes",
+                   &a->aux->pos);
+}
+
+static enum gff_rc read_attrs_cont(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
     struct gff_feature *f = &a->elem->feature;
-    return tokcpy(f->attrs, a->tok, GFF_FEATURE_ATTRS_SIZE, "attributes");
+    *(a->aux->pos - 1) = ' ';
+    return tokcpy0(f->attrs, a->tok, GFF_FEATURE_ATTRS_SIZE, "attributes",
+                   &a->aux->pos);
+}
+
+static enum gff_rc tokcpy0(char *dst, struct gff_tok *tok, size_t count,
+                           char const *name, char **ptr)
+{
+    *ptr = memccpy(dst, tok->value, '\0', count);
+    if (!ptr)
+        return error_parse(tok->error, tok->line.number, "too long %s", name);
+    if (*ptr - dst == 1)
+        return error_parse(tok->error, tok->line.number, "empty %s", name);
+    return GFF_SUCCESS;
 }
 
 static enum gff_rc tokcpy(char *dst, struct gff_tok *tok, size_t count,
                           char const *name)
 {
-    char const *ptr = memccpy(dst, tok->value, '\0', count);
-    if (!ptr)
-        return error_parse(tok->error, tok->line.number, "too long %s", name);
-    if (ptr - dst == 1)
-        return error_parse(tok->error, tok->line.number, "empty %s", name);
-    return GFF_SUCCESS;
+    char *ptr = NULL;
+    return tokcpy0(dst, tok, count, name, &ptr);
 }
