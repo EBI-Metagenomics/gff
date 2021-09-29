@@ -7,9 +7,8 @@ void test_read_example2(void);
 void test_read_example3(void);
 void test_read_example4(void);
 void test_read_example5(void);
-void test_read_damaged1(void);
-void test_read_damaged2(void);
-void test_read_damaged3(void);
+void test_read_corrupted1(void);
+void test_read_corrupted2(void);
 
 int main(void)
 {
@@ -19,9 +18,8 @@ int main(void)
     test_read_example3();
     test_read_example4();
     test_read_example5();
-    test_read_damaged1();
-    test_read_damaged2();
-    test_read_damaged3();
+    test_read_corrupted1();
+    test_read_corrupted2();
     return hope_status();
 }
 
@@ -363,9 +361,9 @@ void test_read_example5(void)
     fclose(fd);
 }
 
-void test_read_damaged1(void)
+void test_read_corrupted1(void)
 {
-    FILE *fd = fopen(ASSETS "/damaged1.gff", "r");
+    FILE *fd = fopen(ASSETS "/corrupted1.gff", "r");
     NOTNULL(fd);
 
     struct gff gff;
@@ -375,20 +373,22 @@ void test_read_damaged1(void)
     enum gff_rc rc = GFF_SUCCESS;
     while (!(rc = gff_read(&gff)))
     {
+        EQ(gff.elem.type, GFF_VERSION);
+        EQ(gff.elem.version, "3");
         i++;
     }
-    EQ(i, 0);
+    EQ(i, 1);
     EQ(rc, GFF_PARSEERROR);
-    EQ(gff.error, "Parse error: unexpected token: line 1");
+    EQ(gff.error, "Parse error: unexpected newline: line 2");
     gff_clearerr(&gff);
     EQ(gff.error, "");
 
     fclose(fd);
 }
 
-void test_read_damaged2(void)
+void test_read_corrupted2(void)
 {
-    FILE *fd = fopen(ASSETS "/damaged2.gff", "r");
+    FILE *fd = fopen(ASSETS "/corrupted2.gff", "r");
     NOTNULL(fd);
 
     struct gff gff;
@@ -400,32 +400,9 @@ void test_read_damaged2(void)
     {
         i++;
     }
-    EQ(i, 0);
+    EQ(i, 12);
     EQ(rc, GFF_PARSEERROR);
-    EQ(gff.error, "Parse error: unexpected id: line 2");
-    gff_clearerr(&gff);
-    EQ(gff.error, "");
-
-    fclose(fd);
-}
-
-void test_read_damaged3(void)
-{
-    FILE *fd = fopen(ASSETS "/damaged3.gff", "r");
-    NOTNULL(fd);
-
-    struct gff gff;
-    gff_init(&gff, fd, GFF_READ);
-
-    unsigned i = 0;
-    enum gff_rc rc = GFF_SUCCESS;
-    while (!(rc = gff_read(&gff)))
-    {
-        i++;
-    }
-    EQ(i, 0);
-    EQ(rc, GFF_PARSEERROR);
-    EQ(gff.error, "Parse error: unexpected token: line 4");
+    EQ(gff.error, "Parse error: unexpected newline: line 13");
     gff_clearerr(&gff);
     EQ(gff.error, "");
 
