@@ -1,34 +1,6 @@
 #include "gff/gff.h"
 #include "hope/hope.h"
 
-#if 0
-static char *mix_id[] = {"LCBO", "MCHU", "gi|5524211|gb|AAD44166.1|",
-                         "gi|5524211|gb|AAD44166.1|"};
-
-static char *mix_desc[] = {
-    "- Prolactin precursor - Bovine",
-    "- Calmodulin - Human, rabbit, bovine, rat, and chicken",
-    "cytochrome b [Elephas maximus maximus]",
-    "cytochrome b [Elephas maximus maximus]"};
-
-static char *mix_seq[] = {
-    "MDSKGSSQKGSRLLLLLVVSNLLLCQGVVSTPVCPNGPGNCQVSLRDLFDRAVMVSHYI"
-    "HDLSSEMFNEFDKRYAQGKGFITMALNSCHTSSLPTPEDKEQAQQTHHEVLMSLILGLL"
-    "RSWNDPLYHLVTEVRGMKGAPDAILSRAIEIEEENKRLLEGMEMIFGQVIPGAKETEPY"
-    "PVWSGLPSLQTKDEDARYSAFYNLLHCLRRDSSKIDTYLKLLNCRIIYNNNC",
-    "MADQLTEEQIAEFKEAFSLFDKDGDGTITTKELGTVMRSLGQNPTEAELQDMINEVDAD"
-    "GNGTIDFPEFLTMMARKMKDTDSEEEIREAFRVFDKDGNGYISAAELRHVMTNLGEKLT"
-    "DEEVDEMIREADIDGDGQVNYEEFVQMMTAK*",
-    "LCLYTHIGRNIYYGSYLYSETWNTGIMLLLITMATAFMGYVLPWGQMSFWGATVITNLFSAIPYIGTNLV"
-    "EWIWGGFSVDKATLNRFFAFHFILPFTMVALAGVHLTFLHETGSNNPLGLTSDSDKIPFHPYYTIKDFLG"
-    "LLILILLLLLLALLSPDMLGDPDNHMPADPLNTPLHIKPEWYFLFAYAILRSVPNKLGGVLALFLSIVIL"
-    "GLMPFLHTSKHRSMMLRPLSQALFWTLTMDLLTLTWIGSQPVEYPYTIIGQMASILYFSIILAFLPIAGX"
-    "IENY",
-    "LCLYTHIGRNIYYGSYLYSETWNTGIMLLLITMATAFMGYVLPWGQMSFWGATVITNLFSAIPYIGT"};
-
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
-#endif
-
 int main(void)
 {
     FILE *fd = fopen(TMPDIR "/example1.gff", "w");
@@ -41,24 +13,79 @@ int main(void)
     enum gff_rc rc = gff_write(&gff);
     EQ(rc, GFF_SUCCESS);
 
-#if 0
-    for (unsigned i = 0; i < ARRAY_SIZE(mix_id); ++i)
-    {
-        gff_write(&gff, gff_target(mix_id[i], mix_desc[i], mix_seq[i]), 60);
-    }
-#endif
+    struct gff_feature *feat = gff_set_feature(&gff);
+
+    GFF_FEATURE_SET(feat, seqid, SEQID, "AE014075.1:190-252|dna");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, source, SOURCE, "iseq");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, type, TYPE, ".");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, start, START, "1");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, end, END, "63");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, score, SCORE, "0.0");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, strand, STRAND, "+");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, phase, PHASE, ".");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, attrs, ATTRS,
+                    "ID=item1;Target_alph=dna;Profile_name=Leader_Thr;Profile_"
+                    "alph=dna;Profile_acc=PF08254.12;Window=0;Bias=17.5;E-"
+                    "value=2.9e-14;Epsilon=0.01;Score=38.8");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    feat = gff_set_feature(&gff);
+
+    GFF_FEATURE_SET(feat, seqid, SEQID, "AE014075.1:534-908|dna");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, source, SOURCE, "iseq");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, type, TYPE, ".");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, start, START, "1");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, end, END, "306");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, score, SCORE, "0.0");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, strand, STRAND, "+");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, phase, PHASE, ".");
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    GFF_FEATURE_SET(feat, attrs, ATTRS,
+                    "ID=item2;Target_alph=dna;Profile_name=Y1_Tnp;Profile_alph="
+                    "dna;Profile_acc=PF01797.17;Window=0;Bias=0.0;E-value=1.7e-"
+                    "29;Epsilon=0.01;Score=88.6");
+    EQ(gff_write(&gff), GFF_SUCCESS);
 
     fclose(fd);
 
-#if 0
-    FILE *actual = fopen(TMPDIR "/mix.gff", "r");
-    FILE *desired = fopen(ASSETS "/desired_mix.gff", "r");
+    FILE *actual = fopen(TMPDIR "/example1.gff", "r");
+    FILE *desired = fopen(ASSETS "/example1.gff", "r");
     NOTNULL(actual);
     NOTNULL(desired);
     EQ(actual, desired);
     fclose(desired);
     fclose(actual);
-#endif
 
     return hope_status();
 }

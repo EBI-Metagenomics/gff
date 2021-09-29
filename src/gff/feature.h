@@ -37,4 +37,7 @@ static inline void gff_feature_init(struct gff_feature *feature)
     feature->attrs[0] = '\0';
 }
 
+#define GFF_FEATURE_SET(feat, field, FIELD, val)                               \
+    memccpy((feat)->field, val, '\0', GFF_FEATURE_##FIELD##_SIZE)
+
 #endif

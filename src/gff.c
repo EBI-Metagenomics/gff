@@ -81,9 +81,22 @@ enum gff_rc write_region(struct gff *gff, struct gff_region const *reg)
 }
 
 #define feat_write(field) fprintf(gff->fd, "%s", feat->field)
+#define check_empty(gff, feat, field)                                          \
+    if (feat->field[0] == '\0')                                                \
+        return error_illegalarg(gff->error, "empty " #field);
 
 enum gff_rc write_feature(struct gff *gff, struct gff_feature const *feat)
 {
+    check_empty(gff, feat, seqid);
+    check_empty(gff, feat, source);
+    check_empty(gff, feat, type);
+    check_empty(gff, feat, start);
+    check_empty(gff, feat, end);
+    check_empty(gff, feat, score);
+    check_empty(gff, feat, strand);
+    check_empty(gff, feat, phase);
+    check_empty(gff, feat, attrs);
+
     if (feat_write(seqid) < 0) return error_io(gff->error, errno);
     if (fputc('\t', gff->fd) == EOF) return error_io(gff->error, errno);
 
@@ -109,7 +122,8 @@ enum gff_rc write_feature(struct gff *gff, struct gff_feature const *feat)
     if (fputc('\t', gff->fd) == EOF) return error_io(gff->error, errno);
 
     if (feat_write(attrs) < 0) return error_io(gff->error, errno);
-    if (fputc('\t', gff->fd) == EOF) return error_io(gff->error, errno);
+
+    if (fputc('\n', gff->fd) == EOF) return error_io(gff->error, errno);
 
     return GFF_SUCCESS;
 }
