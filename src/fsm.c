@@ -67,7 +67,9 @@ static enum gff_rc unexpect_nl(struct args *a)
 }
 
 static enum gff_rc read_version(struct args *a);
-static enum gff_rc read_region(struct args *a);
+static enum gff_rc read_region_name(struct args *a);
+static enum gff_rc read_region_start(struct args *a);
+static enum gff_rc read_region_end(struct args *a);
 static enum gff_rc read_feat_seqid(struct args *a);
 static enum gff_rc read_feat_source(struct args *a);
 static enum gff_rc read_feat_type(struct args *a);
@@ -85,7 +87,7 @@ static struct trans const transition[][6] = {
     [STATE_BEGIN] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
                      [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                      [TOK_VERSION] = {STATE_VERSION, &nop},
-                     [TOK_REGION] = {STATE_REGION, &unexpect_region},
+                     [TOK_REGION] = {STATE_ERROR, &unexpect_region},
                      [TOK_WORD] = {STATE_ERROR, &unexpect_tok},
                      [TOK_EOF] = {STATE_END, &nop}},
     [STATE_VERSION] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -100,12 +102,24 @@ static struct trans const transition[][6] = {
                           [TOK_REGION] = {STATE_ERROR, &unexpect_region},
                           [TOK_WORD] = {STATE_ERROR, &unexpect_tok},
                           [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
-    [STATE_REGION] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
-                      [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
-                      [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
-                      [TOK_REGION] = {STATE_ERROR, &unexpect_region},
-                      [TOK_WORD] = {STATE_REGION_NL, &read_region},
-                      [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
+    [STATE_REGION_NAME] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
+                           [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
+                           [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
+                           [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                           [TOK_WORD] = {STATE_REGION_START, &read_region_name},
+                           [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
+    [STATE_REGION_START] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
+                            [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
+                            [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
+                            [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                            [TOK_WORD] = {STATE_REGION_END, &read_region_start},
+                            [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
+    [STATE_REGION_END] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
+                          [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
+                          [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
+                          [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                          [TOK_WORD] = {STATE_REGION_NL, &read_region_end},
+                          [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_REGION_NL] = {[TOK_NL] = {STATE_PAUSE, &set_region_type},
                          [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                          [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
@@ -169,27 +183,29 @@ static struct trans const transition[][6] = {
     [STATE_PAUSE] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
                      [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                      [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
-                     [TOK_REGION] = {STATE_REGION, &nop},
+                     [TOK_REGION] = {STATE_REGION_NAME, &nop},
                      [TOK_WORD] = {STATE_FEAT_SOURCE, &read_feat_seqid},
-                     [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
+                     [TOK_EOF] = {STATE_END, &nop}},
     [STATE_END] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
-                   [TOK_PRAGMA] = {STATE_ERROR, &unexpect_id},
+                   [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                    [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                    [TOK_REGION] = {STATE_ERROR, &unexpect_region},
                    [TOK_WORD] = {STATE_ERROR, &unexpect_tok},
                    [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_ERROR] = {[TOK_NL] = {STATE_ERROR, &nop},
-                     [TOK_PRAGMA] = {STATE_ERROR, &nop},
+                     [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                      [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                      [TOK_REGION] = {STATE_ERROR, &unexpect_region},
-                     [TOK_WORD] = {STATE_ERROR, &nop},
-                     [TOK_EOF] = {STATE_ERROR, &nop}},
+                     [TOK_WORD] = {STATE_ERROR, &unexpect_tok},
+                     [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
 };
 
 static char state_name[][16] = {[STATE_BEGIN] = "BEGIN",
                                 [STATE_VERSION] = "VERSION",
                                 [STATE_VERSION_NL] = "VERSION_NL",
-                                [STATE_REGION] = "REGION",
+                                [STATE_REGION_NAME] = "REGION_NAME",
+                                [STATE_REGION_START] = "REGION_START",
+                                [STATE_REGION_END] = "REGION_END",
                                 [STATE_REGION_NL] = "REGION_NL",
                                 [STATE_FEAT_SOURCE] = "FEAT_SOURCE",
                                 [STATE_FEAT_TYPE] = "FEAT_TYPE",
@@ -226,26 +242,35 @@ static enum gff_rc read_version(struct args *a)
     return tokcpy(a->elem->version, a->tok, GFF_VERSION_SIZE, "version");
 }
 
-static enum gff_rc read_region(struct args *a)
+static enum gff_rc read_region_name(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
     struct gff_region *r = &a->elem->region;
     gff_region_init(r);
-
-    enum gff_rc rc = tokcpy(r->buffer, a->tok, GFF_REGION_SIZE, "region");
+    enum gff_rc rc = tokcpy(r->buffer, a->tok, GFF_REGION_NAME_SIZE, "name");
     if (rc) return rc;
-
-    char *pos = strchr(r->name, ' ');
-    if (pos == NULL)
-        return error_parse(a->tok->error, a->tok->line.number, "missing space");
-    r->start = pos + 1;
-
-    pos = strchr(r->start, ' ');
-    if (pos == NULL)
-        return error_parse(a->tok->error, a->tok->line.number, "missing space");
-    r->end = pos + 1;
-
+    r->start = r->name + strlen(r->name) + 1;
     return rc;
+}
+
+static enum gff_rc read_region_start(struct args *a)
+{
+    assert(a->tok->id == TOK_WORD);
+    struct gff_region *r = &a->elem->region;
+    size_t n = (size_t)(r->start - r->name);
+    enum gff_rc rc =
+        tokcpy(r->buffer + n, a->tok, GFF_REGION_START_SIZE, "start");
+    if (rc) return rc;
+    r->end = r->start + strlen(r->start) + 1;
+    return rc;
+}
+
+static enum gff_rc read_region_end(struct args *a)
+{
+    assert(a->tok->id == TOK_WORD);
+    struct gff_region *r = &a->elem->region;
+    size_t n = (size_t)(r->end - r->name);
+    return tokcpy(r->buffer + n, a->tok, GFF_REGION_END_SIZE, "end");
 }
 
 static enum gff_rc set_version_type(struct args *a)

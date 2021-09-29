@@ -22,6 +22,14 @@ struct gff_region
     char buffer[GFF_REGION_SIZE];
 };
 
+#define GFF_REGION_INIT(self, n, s, e)                                         \
+    (struct gff_region)                                                        \
+    {                                                                          \
+        {self.buffer, self.buffer + sizeof(n),                                 \
+         self.buffer + sizeof(n) + sizeof(s)},                                 \
+            n "\0" s "\0" e                                                    \
+    }
+
 static inline void gff_region_init(struct gff_region *region)
 {
     region->name = region->buffer;

@@ -37,8 +37,11 @@ enum gff_rc gff_read(struct gff *gff)
 
     } while (gff->state != STATE_PAUSE && gff->state != STATE_END);
 
-    if (gff->state == STATE_END && initial_state == STATE_BEGIN)
+    if (gff->state == STATE_END)
+    {
+        assert(initial_state == STATE_BEGIN || initial_state == STATE_PAUSE);
         return GFF_ENDFILE;
+    }
 
     return GFF_SUCCESS;
 }
