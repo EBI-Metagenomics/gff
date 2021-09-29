@@ -9,7 +9,7 @@ struct gff_tok;
 static inline void fsm_init(enum state *state) { *state = STATE_BEGIN; }
 
 enum state fsm_next(enum state state, struct gff_tok *tok,
-                    struct gff_elem *elem);
+                    struct gff_elem *elem, char **pos);
 
 char const *fsm_name(enum state state);
 

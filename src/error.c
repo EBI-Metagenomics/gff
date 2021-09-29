@@ -26,6 +26,16 @@ static int copy_ap(int dst_size, char *dst, char const *fmt, va_list ap)
     return n;
 }
 
+enum gff_rc error_illegalarg(char *dst, char const *fmt, ...)
+{
+    int n = copy_fmt(GFF_ERROR_SIZE, dst, RUNTIME_ERROR);
+    va_list ap;
+    va_start(ap, fmt);
+    copy_ap(GFF_ERROR_SIZE - n, dst + n, fmt, ap);
+    va_end(ap);
+    return GFF_ILLEGALARG;
+}
+
 #define unused(x) ((void)(x))
 
 enum gff_rc error_io(char *dst, int errnum)

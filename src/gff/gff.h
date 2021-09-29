@@ -21,6 +21,7 @@ struct gff
     struct gff_elem elem;
     unsigned state;
     struct gff_tok tok;
+    char *pos;
     char error[GFF_ERROR_SIZE];
 };
 
@@ -30,6 +31,6 @@ GFF_API enum gff_rc gff_read(struct gff *fa);
 
 GFF_API void gff_clearerr(struct gff *fa);
 
-GFF_API enum gff_rc gff_write(struct gff *fa, struct gff_elem *elem);
+GFF_API enum gff_rc gff_write(struct gff *fa, struct gff_elem const *elem);
 
 #endif

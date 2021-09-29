@@ -12,8 +12,8 @@ struct args
 {
     struct gff_tok *tok;
     enum state state;
-    char *pos;
     struct gff_elem *elem;
+    char **pos;
 };
 
 struct trans
@@ -290,12 +290,12 @@ static char state_name[][16] = {[STATE_BEGIN] = "BEGIN",
                                 [STATE_ERROR] = "ERROR"};
 
 enum state fsm_next(enum state state, struct gff_tok *tok,
-                    struct gff_elem *elem)
+                    struct gff_elem *elem, char **pos)
 {
     unsigned row = (unsigned)state;
     unsigned col = (unsigned)tok->id;
     struct trans const *const t = &transition[row][col];
-    struct args args = {tok, state, NULL, elem};
+    struct args args = {tok, state, elem, pos};
     if (t->action(&args)) return STATE_ERROR;
     return t->next;
 }
@@ -424,21 +424,21 @@ static enum gff_rc read_phase(struct args *a)
 static enum gff_rc read_attrs_init(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
-    a->pos = a->elem->feature.attrs;
-    return tokcpy0(a->pos, a->tok, GFF_FEATURE_ATTRS_SIZE, "attributes",
-                   &a->pos);
+    *a->pos = a->elem->feature.attrs;
+    return tokcpy0(*a->pos, a->tok, GFF_FEATURE_ATTRS_SIZE, "attributes",
+                   a->pos);
 }
 
 static enum gff_rc read_attrs_cont(struct args *a)
 {
     assert(a->tok->id == TOK_WORD);
     struct gff_feature *f = &a->elem->feature;
-    *(a->pos - 1) = ' ';
-    if (GFF_FEATURE_ATTRS_SIZE + f->attrs < a->pos)
+    *(*a->pos - 1) = ' ';
+    if (GFF_FEATURE_ATTRS_SIZE + f->attrs < *a->pos)
         return error_parse(a->tok->error, a->tok->line.number,
                            "too long attributes");
-    size_t n = (size_t)(GFF_FEATURE_ATTRS_SIZE - (a->pos - f->attrs));
-    return tokcpy0(a->pos, a->tok, n, "attributes", &a->pos);
+    size_t n = (size_t)(GFF_FEATURE_ATTRS_SIZE - (*a->pos - f->attrs));
+    return tokcpy0(*a->pos, a->tok, n, "attributes", a->pos);
 }
 
 static enum gff_rc tokcpy0(char *dst, struct gff_tok *tok, size_t count,

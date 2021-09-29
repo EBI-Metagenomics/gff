@@ -8,6 +8,7 @@ enum gff_rc
     GFF_IOERROR,
     GFF_RUNTIMEERROR,
     GFF_PARSEERROR,
+    GFF_ILLEGALARG,
 };
 
 #endif
