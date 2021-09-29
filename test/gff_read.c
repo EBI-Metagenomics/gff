@@ -3,6 +3,7 @@
 
 void test_read_empty(void);
 void test_read_example1(void);
+void test_read_example2(void);
 void test_read_example3(void);
 void test_read_example4(void);
 void test_read_example5(void);
@@ -14,6 +15,7 @@ int main(void)
 {
     test_read_empty();
     test_read_example1();
+    test_read_example2();
     test_read_example3();
     test_read_example4();
     test_read_example5();
@@ -59,6 +61,68 @@ static struct gff_feature ex1_feature[2] = {
                          "ID=item2;Target_alph=dna;Profile_name=Y1_Tnp;Profile_"
                          "alph=dna;Profile_acc=PF01797.17;Window=0;Bias=0.0;E-"
                          "value=1.7e-29;Epsilon=0.01;Score=88.6"}};
+
+static enum gff_elem_type ex2_type[] = {GFF_VERSION, GFF_REGION,  GFF_REGION,
+                                        GFF_FEATURE, GFF_FEATURE, GFF_FEATURE,
+                                        GFF_FEATURE, GFF_FEATURE, GFF_FEATURE,
+                                        GFF_FEATURE, GFF_FEATURE, GFF_FEATURE};
+
+static struct gff_region ex2_region[] = {
+    GFF_REGION_INIT(ex2_region[0], "1", "1", "1195517"),
+    GFF_REGION_INIT(ex2_region[1], "2", "1", "6358"),
+};
+
+static struct gff_feature ex2_feature[] = {
+    (struct gff_feature){
+        "1", "Prodigal:002006", "CDS", "62", "886", ".", "+", "0",
+        "ID=GALNBKIG_00001;eC_number=2.3.1.179;Name=fabF;gene=fabF;inference="
+        "ab initio prediction:Prodigal:002006,similar to AA "
+        "sequence:UniProtKB:P73283;locus_tag=GALNBKIG_00001;product=3-oxoacyl-["
+        "acyl-carrier-protein] synthase 2"},
+    (struct gff_feature){"1", "Prodigal:002006", "CDS", "895", "1344", ".", "+",
+                         "0",
+                         "ID=GALNBKIG_00002;eC_number=3.6.1.61;Name=ndx1;db_"
+                         "xref=COG:COG0494;gene=ndx1;inference=ab initio "
+                         "prediction:Prodigal:002006,similar to AA "
+                         "sequence:UniProtKB:Q75UV1;locus_tag=GALNBKIG_00002;"
+                         "product=Diadenosine hexaphosphate hydrolase"},
+    (struct gff_feature){"1", "Prodigal:002006", "CDS", "1192432", "1194060",
+                         ".", "+", "0",
+                         "ID=GALNBKIG_01023;inference=ab initio "
+                         "prediction:Prodigal:002006;locus_tag=GALNBKIG_01023;"
+                         "product=hypothetical protein"},
+    (struct gff_feature){"1", "Prodigal:002006", "CDS", "1194066", "1194704",
+                         ".", "+", "0",
+                         "ID=GALNBKIG_01024;inference=ab initio "
+                         "prediction:Prodigal:002006;locus_tag=GALNBKIG_01024;"
+                         "product=hypothetical protein"},
+    (struct gff_feature){"2", "Prodigal:002006", "CDS", "2", "361", ".", "+",
+                         "0",
+                         "ID=GALNBKIG_01026;inference=ab initio "
+                         "prediction:Prodigal:002006;locus_tag=GALNBKIG_01026;"
+                         "product=hypothetical protein"},
+    (struct gff_feature){"2", "Prodigal:002006", "CDS", "3694", "3993", ".",
+                         "+", "0",
+                         "ID=GALNBKIG_01030;inference=ab initio "
+                         "prediction:Prodigal:002006;locus_tag=GALNBKIG_01030;"
+                         "product=hypothetical protein"},
+    (struct gff_feature){
+        "2", "Prodigal:002006", "CDS", "4018", "4794", ".", "+", "0",
+        "ID=GALNBKIG_01031;eC_number=3.6.-.-;Name=soj_2;db_xref=COG:COG1192;"
+        "gene=soj_2;inference=ab initio prediction:Prodigal:002006,similar to "
+        "AA "
+        "sequence:UniProtKB:P37522;locus_tag=GALNBKIG_01031;product="
+        "Sporulation initiation inhibitor protein Soj"},
+    (struct gff_feature){"2", "Prodigal:002006", "CDS", "4799", "5506", ".",
+                         "+", "0",
+                         "ID=GALNBKIG_01032;inference=ab initio "
+                         "prediction:Prodigal:002006;locus_tag=GALNBKIG_01032;"
+                         "product=hypothetical protein"},
+    (struct gff_feature){"2", "Prodigal:002006", "CDS", "5915", "6127", ".",
+                         "-", "0",
+                         "ID=GALNBKIG_01033;inference=ab initio "
+                         "prediction:Prodigal:002006;locus_tag=GALNBKIG_01033;"
+                         "product=hypothetical protein"}};
 
 static enum gff_elem_type ex4_type[25] = {
     GFF_VERSION, GFF_REGION,  GFF_FEATURE, GFF_FEATURE, GFF_FEATURE,
@@ -181,6 +245,39 @@ void test_read_example1(void)
         i++;
     }
     EQ(i, 3);
+    EQ(rc, GFF_ENDFILE);
+
+    fclose(fd);
+}
+
+void test_read_example2(void)
+{
+    FILE *fd = fopen(ASSETS "/example2.gff", "r");
+    NOTNULL(fd);
+
+    struct gff gff;
+    gff_init(&gff, fd, GFF_READ);
+
+    unsigned i = 0;
+    unsigned i_region = 0;
+    unsigned i_feat = 0;
+    enum gff_rc rc = GFF_SUCCESS;
+    while (!(rc = gff_read(&gff)))
+    {
+        EQ(gff.elem.type, ex2_type[i]);
+
+        if (gff.elem.type == GFF_VERSION)
+            EQ(gff.elem.version, "3");
+        else if (gff.elem.type == GFF_REGION)
+            eq_region(&gff.elem.region, &ex2_region[i_region++]);
+        else if (gff.elem.type == GFF_FEATURE)
+            eq_feat(&gff.elem.feature, &ex2_feature[i_feat++]);
+        else
+            COND(false);
+
+        i++;
+    }
+    EQ(i, 12);
     EQ(rc, GFF_ENDFILE);
 
     fclose(fd);

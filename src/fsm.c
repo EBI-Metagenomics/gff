@@ -60,6 +60,12 @@ static enum gff_rc unexpect_region(struct args *a)
                        "unexpected region directive");
 }
 
+static enum gff_rc unexpect_fasta(struct args *a)
+{
+    return error_parse(a->tok->error, a->tok->line.number,
+                       "unexpected fasta directive");
+}
+
 static enum gff_rc unexpect_id(struct args *a)
 {
     return error_parse(a->tok->error, a->tok->line.number, "unexpected id");
@@ -89,12 +95,13 @@ static enum gff_rc set_version_type(struct args *a);
 static enum gff_rc set_region_type(struct args *a);
 static enum gff_rc set_feature_type(struct args *a);
 
-static struct trans const transition[][7] = {
+static struct trans const transition[][8] = {
     [STATE_BEGIN] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
                      [TOK_COMMENT] = {STATE_COMMENT, &nop},
                      [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                      [TOK_VERSION] = {STATE_VERSION, &nop},
                      [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                     [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                      [TOK_WORD] = {STATE_ERROR, &unexpect_tok},
                      [TOK_EOF] = {STATE_END, &nop}},
     [STATE_VERSION] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -102,6 +109,7 @@ static struct trans const transition[][7] = {
                        [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                        [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                        [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                       [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                        [TOK_WORD] = {STATE_VERSION_NL, &read_version},
                        [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_VERSION_NL] = {[TOK_NL] = {STATE_PAUSE, &set_version_type},
@@ -109,6 +117,7 @@ static struct trans const transition[][7] = {
                           [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                           [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                           [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                          [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                           [TOK_WORD] = {STATE_ERROR, &unexpect_tok},
                           [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_COMMENT] = {[TOK_NL] = {STATE_COMMENT_END, &nop},
@@ -116,6 +125,7 @@ static struct trans const transition[][7] = {
                        [TOK_PRAGMA] = {STATE_COMMENT, &nop},
                        [TOK_VERSION] = {STATE_COMMENT, &nop},
                        [TOK_REGION] = {STATE_COMMENT, &nop},
+                       [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                        [TOK_WORD] = {STATE_COMMENT, &nop},
                        [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_COMMENT_END] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -123,6 +133,7 @@ static struct trans const transition[][7] = {
                            [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                            [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                            [TOK_REGION] = {STATE_REGION_NAME, &nop},
+                           [TOK_FASTA] = {STATE_END, &nop},
                            [TOK_WORD] = {STATE_FEAT_SOURCE, &read_seqid},
                            [TOK_EOF] = {STATE_END, &nop}},
     [STATE_REGION_NAME] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -130,6 +141,7 @@ static struct trans const transition[][7] = {
                            [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                            [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                            [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                           [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                            [TOK_WORD] = {STATE_REGION_START, &read_region_name},
                            [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_REGION_START] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -137,6 +149,7 @@ static struct trans const transition[][7] = {
                             [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                             [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                             [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                            [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                             [TOK_WORD] = {STATE_REGION_END, &read_region_start},
                             [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_REGION_END] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -144,6 +157,7 @@ static struct trans const transition[][7] = {
                           [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                           [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                           [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                          [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                           [TOK_WORD] = {STATE_REGION_NL, &read_region_end},
                           [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_REGION_NL] = {[TOK_NL] = {STATE_PAUSE, &set_region_type},
@@ -151,6 +165,7 @@ static struct trans const transition[][7] = {
                          [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                          [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                          [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                         [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                          [TOK_WORD] = {STATE_ERROR, &unexpect_tok},
                          [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_SOURCE] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -158,6 +173,7 @@ static struct trans const transition[][7] = {
                            [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                            [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                            [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                           [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                            [TOK_WORD] = {STATE_FEAT_TYPE, &read_source},
                            [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_TYPE] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -165,6 +181,7 @@ static struct trans const transition[][7] = {
                          [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                          [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                          [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                         [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                          [TOK_WORD] = {STATE_FEAT_START, &read_type},
                          [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_START] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -172,6 +189,7 @@ static struct trans const transition[][7] = {
                           [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                           [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                           [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                          [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                           [TOK_WORD] = {STATE_FEAT_END, &read_start},
                           [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_END] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -179,6 +197,7 @@ static struct trans const transition[][7] = {
                         [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                         [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                         [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                        [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                         [TOK_WORD] = {STATE_FEAT_SCORE, &read_end},
                         [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_SCORE] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -186,6 +205,7 @@ static struct trans const transition[][7] = {
                           [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                           [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                           [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                          [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                           [TOK_WORD] = {STATE_FEAT_STRAND, &read_score},
                           [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_STRAND] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -193,6 +213,7 @@ static struct trans const transition[][7] = {
                            [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                            [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                            [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                           [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                            [TOK_WORD] = {STATE_FEAT_PHASE, &read_strand},
                            [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_PHASE] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -200,6 +221,7 @@ static struct trans const transition[][7] = {
                           [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                           [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                           [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                          [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                           [TOK_WORD] = {STATE_FEAT_ATTRS_INIT, &read_phase},
                           [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_FEAT_ATTRS_INIT] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -207,6 +229,7 @@ static struct trans const transition[][7] = {
                                [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                                [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                                [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                               [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                                [TOK_WORD] = {STATE_FEAT_ATTRS_CONT,
                                              &read_attrs_init},
                                [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
@@ -215,6 +238,7 @@ static struct trans const transition[][7] = {
                                [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                                [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                                [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                               [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                                [TOK_WORD] = {STATE_FEAT_ATTRS_CONT,
                                              &read_attrs_cont},
                                [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
@@ -223,6 +247,7 @@ static struct trans const transition[][7] = {
                      [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                      [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                      [TOK_REGION] = {STATE_REGION_NAME, &nop},
+                     [TOK_FASTA] = {STATE_END, &nop},
                      [TOK_WORD] = {STATE_FEAT_SOURCE, &read_seqid},
                      [TOK_EOF] = {STATE_END, &nop}},
     [STATE_END] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -230,6 +255,7 @@ static struct trans const transition[][7] = {
                    [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                    [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                    [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                   [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                    [TOK_WORD] = {STATE_ERROR, &unexpect_tok},
                    [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
     [STATE_ERROR] = {[TOK_NL] = {STATE_ERROR, &unexpect_nl},
@@ -237,6 +263,7 @@ static struct trans const transition[][7] = {
                      [TOK_PRAGMA] = {STATE_ERROR, &unexpect_pragma},
                      [TOK_VERSION] = {STATE_ERROR, &unexpect_version},
                      [TOK_REGION] = {STATE_ERROR, &unexpect_region},
+                     [TOK_FASTA] = {STATE_ERROR, &unexpect_fasta},
                      [TOK_WORD] = {STATE_ERROR, &unexpect_tok},
                      [TOK_EOF] = {STATE_ERROR, &unexpect_eof}},
 };

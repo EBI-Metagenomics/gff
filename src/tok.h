@@ -13,6 +13,7 @@ enum tok_id
     TOK_PRAGMA,
     TOK_VERSION,
     TOK_REGION,
+    TOK_FASTA,
     TOK_WORD,
     TOK_EOF,
 };

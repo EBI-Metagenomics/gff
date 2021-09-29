@@ -56,6 +56,8 @@ enum gff_rc tok_next(struct gff_tok *tok, FILE *restrict fd)
             tok->id = TOK_VERSION;
         else if (!strcmp(tok->value, "##sequence-region"))
             tok->id = TOK_REGION;
+        else if (!strcmp(tok->value, "##FASTA"))
+            tok->id = TOK_FASTA;
         else
             tok->id = TOK_PRAGMA;
     }
