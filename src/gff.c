@@ -54,17 +54,17 @@ enum gff_rc write_feature(struct gff *gff, struct gff_feature const *feat);
 
 enum gff_rc gff_write(struct gff *gff)
 {
-    if (!gff->version_written && gff->elem.type != GFF_VERSION)
+    if (!gff->version_written && gff->elem.type != GFF_ELEM_VERSION)
         return error_illegalarg(gff->error, "write version first");
 
-    if (gff->elem.type == GFF_REGION)
+    if (gff->elem.type == GFF_ELEM_REGION)
         return write_region(gff, &gff->elem.region);
-    else if (gff->elem.type == GFF_FEATURE)
+    else if (gff->elem.type == GFF_ELEM_FEATURE)
         return write_feature(gff, &gff->elem.feature);
-    else if (gff->elem.type == GFF_VERSION)
+    else if (gff->elem.type == GFF_ELEM_VERSION)
         return write_version(gff);
 
-    return error_illegalarg(gff->error, "GFF_UNKNOWN element type");
+    return error_illegalarg(gff->error, "GFF_ELEM_UNKNOWN element type");
 }
 
 enum gff_rc write_version(struct gff *gff)

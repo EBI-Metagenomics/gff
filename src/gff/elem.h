@@ -6,10 +6,10 @@
 
 enum gff_elem_type
 {
-    GFF_UNKNOWN,
-    GFF_VERSION,
-    GFF_REGION,
-    GFF_FEATURE,
+    GFF_ELEM_UNKNOWN,
+    GFF_ELEM_VERSION,
+    GFF_ELEM_REGION,
+    GFF_ELEM_FEATURE,
 };
 
 #define GFF_VERSION_SIZE 16
@@ -27,7 +27,7 @@ struct gff_elem
 
 static inline void gff_elem_init(struct gff_elem *elem)
 {
-    elem->type = GFF_UNKNOWN;
+    elem->type = GFF_ELEM_UNKNOWN;
     elem->version[0] = '\0';
     gff_region_init(&elem->region);
     gff_feature_init(&elem->feature);

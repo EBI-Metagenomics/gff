@@ -38,14 +38,14 @@ static inline bool gff_set_version(struct gff *gff, char const *val)
 {
     if (val == NULL)
     {
-        gff->elem.type = GFF_VERSION;
+        gff->elem.type = GFF_ELEM_VERSION;
         gff->elem.version[0] = '3';
         gff->elem.version[1] = '\0';
         return true;
     }
     size_t n = gff_strlcpy(gff->elem.version, val, GFF_VERSION_SIZE);
     bool ok = n > 0 && n < GFF_VERSION_SIZE;
-    if (ok) gff->elem.type = GFF_VERSION;
+    if (ok) gff->elem.type = GFF_ELEM_VERSION;
     return ok;
 }
 
@@ -56,13 +56,13 @@ static inline bool gff_set_region(struct gff *gff, char const *name,
     if (!gff_rset_name(&gff->elem.region, name)) return false;
     if (!gff_rset_start(&gff->elem.region, start)) return false;
     bool ok = gff_rset_end(&gff->elem.region, end);
-    if (ok) gff->elem.type = GFF_REGION;
+    if (ok) gff->elem.type = GFF_ELEM_REGION;
     return ok;
 }
 
 static inline struct gff_feature *gff_set_feature(struct gff *gff)
 {
-    gff->elem.type = GFF_FEATURE;
+    gff->elem.type = GFF_ELEM_FEATURE;
     gff_feature_init(&gff->elem.feature);
     return &gff->elem.feature;
 }

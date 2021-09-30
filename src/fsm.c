@@ -347,21 +347,21 @@ static enum gff_rc read_region_end(struct args *a)
 static enum gff_rc set_version_type(struct args *a)
 {
     assert(a->tok->id == TOK_NL);
-    a->elem->type = GFF_VERSION;
+    a->elem->type = GFF_ELEM_VERSION;
     return GFF_SUCCESS;
 }
 
 static enum gff_rc set_region_type(struct args *a)
 {
     assert(a->tok->id == TOK_NL);
-    a->elem->type = GFF_REGION;
+    a->elem->type = GFF_ELEM_REGION;
     return GFF_SUCCESS;
 }
 
 static enum gff_rc set_feature_type(struct args *a)
 {
     assert(a->tok->id == TOK_NL);
-    a->elem->type = GFF_FEATURE;
+    a->elem->type = GFF_ELEM_FEATURE;
     return GFF_SUCCESS;
 }
 

@@ -43,8 +43,8 @@ void test_read_empty(void)
     fclose(fd);
 }
 
-static enum gff_elem_type ex1_type[] = {GFF_VERSION, GFF_FEATURE, GFF_FEATURE,
-                                        GFF_FEATURE};
+static enum gff_elem_type ex1_type[] = {GFF_ELEM_VERSION, GFF_ELEM_FEATURE,
+                                        GFF_ELEM_FEATURE, GFF_ELEM_FEATURE};
 
 static struct gff_feature ex1_feature[2] = {
     (struct gff_feature){"AE014075.1:190-252|dna", "iseq", ".", "1", "63",
@@ -60,10 +60,10 @@ static struct gff_feature ex1_feature[2] = {
                          "alph=dna;Profile_acc=PF01797.17;Window=0;Bias=0.0;E-"
                          "value=1.7e-29;Epsilon=0.01;Score=88.6"}};
 
-static enum gff_elem_type ex2_type[] = {GFF_VERSION, GFF_REGION,  GFF_REGION,
-                                        GFF_FEATURE, GFF_FEATURE, GFF_FEATURE,
-                                        GFF_FEATURE, GFF_FEATURE, GFF_FEATURE,
-                                        GFF_FEATURE, GFF_FEATURE, GFF_FEATURE};
+static enum gff_elem_type ex2_type[] = {
+    GFF_ELEM_VERSION, GFF_ELEM_REGION,  GFF_ELEM_REGION,  GFF_ELEM_FEATURE,
+    GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE,
+    GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE};
 
 static struct gff_region ex2_region[] = {
     GFF_REGION_INIT(ex2_region[0], "1", "1", "1195517"),
@@ -123,11 +123,13 @@ static struct gff_feature ex2_feature[] = {
                          "product=hypothetical protein"}};
 
 static enum gff_elem_type ex4_type[25] = {
-    GFF_VERSION, GFF_REGION,  GFF_FEATURE, GFF_FEATURE, GFF_FEATURE,
-    GFF_FEATURE, GFF_FEATURE, GFF_FEATURE, GFF_FEATURE, GFF_FEATURE,
-    GFF_FEATURE, GFF_FEATURE, GFF_FEATURE, GFF_FEATURE, GFF_FEATURE,
-    GFF_FEATURE, GFF_FEATURE, GFF_FEATURE, GFF_FEATURE, GFF_FEATURE,
-    GFF_FEATURE, GFF_FEATURE, GFF_FEATURE, GFF_FEATURE, GFF_FEATURE,
+    GFF_ELEM_VERSION, GFF_ELEM_REGION,  GFF_ELEM_FEATURE, GFF_ELEM_FEATURE,
+    GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE,
+    GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE,
+    GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE,
+    GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE,
+    GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE, GFF_ELEM_FEATURE,
+    GFF_ELEM_FEATURE,
 };
 
 static struct gff_region ex4_region[1] = {
@@ -182,9 +184,9 @@ static struct gff_feature ex4_feature[23] = {
                          "ID=cds00004;Parent=mRNA00003;Name=edenprotein.4"}};
 
 static enum gff_elem_type ex5_type[3] = {
-    GFF_VERSION,
-    GFF_FEATURE,
-    GFF_FEATURE,
+    GFF_ELEM_VERSION,
+    GFF_ELEM_FEATURE,
+    GFF_ELEM_FEATURE,
 };
 
 static struct gff_feature ex5_feature[2] = {
@@ -230,12 +232,12 @@ void test_read_example1(void)
     {
         EQ(gff.elem.type, ex1_type[i]);
 
-        if (ex1_type[i] == GFF_VERSION)
+        if (ex1_type[i] == GFF_ELEM_VERSION)
             EQ(gff.elem.version, "3");
-        else if (ex1_type[i] == GFF_REGION)
+        else if (ex1_type[i] == GFF_ELEM_REGION)
         {
         }
-        else if (ex1_type[i] == GFF_FEATURE)
+        else if (ex1_type[i] == GFF_ELEM_FEATURE)
             eq_feat(&gff.elem.feature, &ex1_feature[i_feat++]);
         else
             COND(false);
@@ -264,11 +266,11 @@ void test_read_example2(void)
     {
         EQ(gff.elem.type, ex2_type[i]);
 
-        if (gff.elem.type == GFF_VERSION)
+        if (gff.elem.type == GFF_ELEM_VERSION)
             EQ(gff.elem.version, "3");
-        else if (gff.elem.type == GFF_REGION)
+        else if (gff.elem.type == GFF_ELEM_REGION)
             eq_region(&gff.elem.region, &ex2_region[i_region++]);
-        else if (gff.elem.type == GFF_FEATURE)
+        else if (gff.elem.type == GFF_ELEM_FEATURE)
             eq_feat(&gff.elem.feature, &ex2_feature[i_feat++]);
         else
             COND(false);
@@ -290,7 +292,7 @@ void test_read_example3(void)
     gff_init(&gff, fd, GFF_READ);
 
     enum gff_rc rc = gff_read(&gff);
-    EQ(gff.elem.type, GFF_VERSION);
+    EQ(gff.elem.type, GFF_ELEM_VERSION);
     EQ(gff.elem.version, "3");
     rc = gff_read(&gff);
     EQ(rc, GFF_ENDFILE);
@@ -314,11 +316,11 @@ void test_read_example4(void)
     {
         EQ(gff.elem.type, ex4_type[i]);
 
-        if (gff.elem.type == GFF_VERSION)
+        if (gff.elem.type == GFF_ELEM_VERSION)
             EQ(gff.elem.version, "3.1.26");
-        else if (gff.elem.type == GFF_REGION)
+        else if (gff.elem.type == GFF_ELEM_REGION)
             eq_region(&gff.elem.region, &ex4_region[i_region++]);
-        else if (gff.elem.type == GFF_FEATURE)
+        else if (gff.elem.type == GFF_ELEM_FEATURE)
             eq_feat(&gff.elem.feature, &ex4_feature[i_feat++]);
         else
             COND(false);
@@ -346,9 +348,9 @@ void test_read_example5(void)
     {
         EQ(gff.elem.type, ex5_type[i]);
 
-        if (gff.elem.type == GFF_VERSION)
+        if (gff.elem.type == GFF_ELEM_VERSION)
             EQ(gff.elem.version, "3.1.26");
-        else if (gff.elem.type == GFF_FEATURE)
+        else if (gff.elem.type == GFF_ELEM_FEATURE)
             eq_feat(&gff.elem.feature, &ex5_feature[i_feat++]);
         else
             COND(false);
@@ -373,7 +375,7 @@ void test_read_corrupted1(void)
     enum gff_rc rc = GFF_SUCCESS;
     while (!(rc = gff_read(&gff)))
     {
-        EQ(gff.elem.type, GFF_VERSION);
+        EQ(gff.elem.type, GFF_ELEM_VERSION);
         EQ(gff.elem.version, "3");
         i++;
     }
