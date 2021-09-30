@@ -3,11 +3,13 @@
 
 void test_example1(void);
 void test_example4(void);
+void test_wrong_usage(void);
 
 int main(void)
 {
     test_example1();
     test_example4();
+    test_wrong_usage();
     return hope_status();
 }
 
@@ -19,7 +21,7 @@ void test_example1(void)
     struct gff gff;
     gff_init(&gff, fd, GFF_WRITE);
 
-    gff_set_version(&gff, NULL);
+    COND(gff_set_version(&gff, NULL));
     EQ(gff_write(&gff), GFF_SUCCESS);
 
     struct gff_feature *feat = gff_set_feature(&gff);
@@ -373,4 +375,52 @@ void test_example4(void)
     EQ(actual, desired);
     fclose(desired);
     fclose(actual);
+}
+
+void test_wrong_usage(void)
+{
+    FILE *fd = fopen(TMPDIR "/wrong_usage1.gff", "w");
+    NOTNULL(fd);
+
+    struct gff gff;
+    gff_init(&gff, fd, GFF_WRITE);
+
+    struct gff_feature *feat = gff_set_feature(&gff);
+    COND(gff_fset_seqid(feat, "AE014075.1:190-252|dna"));
+    COND(gff_fset_source(feat, "iseq"));
+    COND(gff_fset_type(feat, "."));
+    COND(gff_fset_start(feat, "1"));
+    COND(gff_fset_end(feat, "63"));
+    COND(gff_fset_score(feat, "0.0"));
+    COND(gff_fset_strand(feat, "+"));
+    COND(gff_fset_phase(feat, "."));
+    COND(gff_fset_attrs(feat, "value=2.9e-14"));
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+
+    COND(!gff_set_version(&gff, ""));
+    EQ(gff_write(&gff), GFF_ILLEGALARG);
+    EQ(gff.error, "Runtime error: write version first");
+    gff_clearerr(&gff);
+    EQ(gff.error, "");
+
+    COND(gff_set_version(&gff, NULL));
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    feat = gff_set_feature(&gff);
+    COND(gff_fset_seqid(feat, "AE014075.1:534-908|dna"));
+    COND(gff_fset_source(feat, "iseq"));
+    COND(gff_fset_type(feat, "."));
+    COND(gff_fset_start(feat, "1"));
+    COND(gff_fset_end(feat, "306"));
+    COND(gff_fset_score(feat, "0.0"));
+    COND(!gff_fset_strand(feat, "++++"));
+    COND(gff_fset_strand(feat, "+"));
+    COND(gff_fset_phase(feat, "."));
+    COND(gff_fset_attrs(
+        feat, "ID=item2;Target_alph=dna;Profile_name=Y1_Tnp;Profile_alph="
+              "dna;Profile_acc=PF01797.17;Window=0;Bias=0.0;E-value=1.7e-"
+              "29;Epsilon=0.01;Score=88.6"));
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    fclose(fd);
 }

@@ -12,6 +12,7 @@ void gff_init(struct gff *gff, FILE *restrict fd, enum gff_mode mode)
     gff_elem_init(&gff->elem);
     fsm_init(&gff->state);
     gff->pos = NULL;
+    gff->version_written = false;
     gff->error[0] = '\0';
     tok_init(&gff->tok, gff->error);
 }
@@ -53,19 +54,24 @@ enum gff_rc write_feature(struct gff *gff, struct gff_feature const *feat);
 
 enum gff_rc gff_write(struct gff *gff)
 {
+    if (!gff->version_written && gff->elem.type != GFF_VERSION)
+        return error_illegalarg(gff->error, "write version first");
+
     if (gff->elem.type == GFF_REGION)
         return write_region(gff, &gff->elem.region);
     else if (gff->elem.type == GFF_FEATURE)
         return write_feature(gff, &gff->elem.feature);
     else if (gff->elem.type == GFF_VERSION)
         return write_version(gff);
-    return error_illegalarg(gff->error, "gff_unknown element type");
+
+    return error_illegalarg(gff->error, "GFF_UNKNOWN element type");
 }
 
 enum gff_rc write_version(struct gff *gff)
 {
     if (fprintf(gff->fd, "##gff-version %s\n", gff->elem.version) < 0)
         return error_io(gff->error, errno);
+    gff->version_written = true;
     return GFF_SUCCESS;
 }
 

@@ -22,6 +22,7 @@ struct gff
     unsigned state;
     struct gff_tok tok;
     char *pos;
+    bool version_written;
     char error[GFF_ERROR_SIZE];
 };
 
@@ -35,24 +36,28 @@ GFF_API enum gff_rc gff_write(struct gff *gff);
 
 static inline bool gff_set_version(struct gff *gff, char const *val)
 {
-    gff->elem.type = GFF_VERSION;
     if (val == NULL)
     {
+        gff->elem.type = GFF_VERSION;
         gff->elem.version[0] = '3';
         gff->elem.version[1] = '\0';
         return true;
     }
-    return gff_strlcpy(gff->elem.version, val, GFF_VERSION_SIZE);
+    size_t n = gff_strlcpy(gff->elem.version, val, GFF_VERSION_SIZE);
+    bool ok = n > 0 && n < GFF_VERSION_SIZE;
+    if (ok) gff->elem.type = GFF_VERSION;
+    return ok;
 }
 
 static inline bool gff_set_region(struct gff *gff, char const *name,
                                   char const *start, char const *end)
 {
-    gff->elem.type = GFF_REGION;
     gff_region_init(&gff->elem.region);
     if (!gff_rset_name(&gff->elem.region, name)) return false;
     if (!gff_rset_start(&gff->elem.region, start)) return false;
-    return gff_rset_end(&gff->elem.region, end);
+    bool ok = gff_rset_end(&gff->elem.region, end);
+    if (ok) gff->elem.type = GFF_REGION;
+    return ok;
 }
 
 static inline struct gff_feature *gff_set_feature(struct gff *gff)
