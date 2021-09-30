@@ -2,12 +2,12 @@
 #include "hope/hope.h"
 
 void test_example1(void);
-void test_example2(void);
+void test_example4(void);
 
 int main(void)
 {
     test_example1();
-    /* test_example2(); */
+    test_example4();
     return hope_status();
 }
 
@@ -19,56 +19,55 @@ void test_example1(void)
     struct gff gff;
     gff_init(&gff, fd, GFF_WRITE);
 
-    gff_set_version(&gff);
-    enum gff_rc rc = gff_write(&gff);
-    EQ(rc, GFF_SUCCESS);
+    gff_set_version(&gff, NULL);
+    EQ(gff_write(&gff), GFF_SUCCESS);
 
     struct gff_feature *feat = gff_set_feature(&gff);
 
-    GFF_FEATURE_SET(feat, seqid, SEQID, "AE014075.1:190-252|dna");
+    COND(gff_fset_seqid(feat, "AE014075.1:190-252|dna"));
     EQ(gff_write(&gff), GFF_ILLEGALARG);
 
-    GFF_FEATURE_SET(feat, source, SOURCE, "iseq");
+    COND(gff_fset_source(feat, "iseq"));
     EQ(gff_write(&gff), GFF_ILLEGALARG);
 
-    GFF_FEATURE_SET(feat, type, TYPE, ".");
+    COND(gff_fset_type(feat, "."));
     EQ(gff_write(&gff), GFF_ILLEGALARG);
 
-    GFF_FEATURE_SET(feat, start, START, "1");
+    COND(gff_fset_start(feat, "1"));
     EQ(gff_write(&gff), GFF_ILLEGALARG);
 
-    GFF_FEATURE_SET(feat, end, END, "63");
+    COND(gff_fset_end(feat, "63"));
     EQ(gff_write(&gff), GFF_ILLEGALARG);
 
-    GFF_FEATURE_SET(feat, score, SCORE, "0.0");
+    COND(gff_fset_score(feat, "0.0"));
     EQ(gff_write(&gff), GFF_ILLEGALARG);
 
-    GFF_FEATURE_SET(feat, strand, STRAND, "+");
+    COND(gff_fset_strand(feat, "+"));
     EQ(gff_write(&gff), GFF_ILLEGALARG);
 
-    GFF_FEATURE_SET(feat, phase, PHASE, ".");
+    COND(gff_fset_phase(feat, "."));
     EQ(gff_write(&gff), GFF_ILLEGALARG);
 
-    GFF_FEATURE_SET(feat, attrs, ATTRS,
-                    "ID=item1;Target_alph=dna;Profile_name=Leader_Thr;Profile_"
-                    "alph=dna;Profile_acc=PF08254.12;Window=0;Bias=17.5;E-"
-                    "value=2.9e-14;Epsilon=0.01;Score=38.8");
+    COND(gff_fset_attrs(
+        feat, "ID=item1;Target_alph=dna;Profile_name=Leader_Thr;Profile_"
+              "alph=dna;Profile_acc=PF08254.12;Window=0;Bias=17.5;E-"
+              "value=2.9e-14;Epsilon=0.01;Score=38.8"));
     EQ(gff_write(&gff), GFF_SUCCESS);
 
     feat = gff_set_feature(&gff);
 
-    GFF_FSET_SEQID(feat, "AE014075.1:534-908|dna");
-    GFF_FSET_SOURCE(feat, "iseq");
-    GFF_FSET_TYPE(feat, ".");
-    GFF_FSET_START(feat, "1");
-    GFF_FSET_END(feat, "306");
-    GFF_FSET_SCORE(feat, "0.0");
-    GFF_FSET_STRAND(feat, "+");
-    GFF_FSET_PHASE(feat, ".");
-    GFF_FSET_ATTRS(feat,
-                   "ID=item2;Target_alph=dna;Profile_name=Y1_Tnp;Profile_alph="
-                   "dna;Profile_acc=PF01797.17;Window=0;Bias=0.0;E-value=1.7e-"
-                   "29;Epsilon=0.01;Score=88.6");
+    COND(gff_fset_seqid(feat, "AE014075.1:534-908|dna"));
+    COND(gff_fset_source(feat, "iseq"));
+    COND(gff_fset_type(feat, "."));
+    COND(gff_fset_start(feat, "1"));
+    COND(gff_fset_end(feat, "306"));
+    COND(gff_fset_score(feat, "0.0"));
+    COND(gff_fset_strand(feat, "+"));
+    COND(gff_fset_phase(feat, "."));
+    COND(gff_fset_attrs(
+        feat, "ID=item2;Target_alph=dna;Profile_name=Y1_Tnp;Profile_alph="
+              "dna;Profile_acc=PF01797.17;Window=0;Bias=0.0;E-value=1.7e-"
+              "29;Epsilon=0.01;Score=88.6"));
     EQ(gff_write(&gff), GFF_SUCCESS);
 
     fclose(fd);
@@ -82,76 +81,278 @@ void test_example1(void)
     fclose(actual);
 }
 
-void test_example2(void)
+void test_example4(void)
 {
-    FILE *fd = fopen(TMPDIR "/example2.gff", "w");
+    FILE *fd = fopen(TMPDIR "/example4.gff", "w");
     NOTNULL(fd);
 
     struct gff gff;
     gff_init(&gff, fd, GFF_WRITE);
 
-    gff_set_version(&gff);
-    gff.elem.type = GFF_VERSION;
-    /* if (gff_strlcpy(args->output_file, arg, PATH_MAX) >= PATH_MAX) */
-    /* gff.elem.version[0] = {'3'}; */
-    gff.elem.version[0] = '3';
-    gff.elem.version[1] = '\0';
-
-    enum gff_rc rc = gff_write(&gff);
-    EQ(rc, GFF_SUCCESS);
-
-    struct gff_feature *feat = gff_set_feature(&gff);
-
-    GFF_FEATURE_SET(feat, seqid, SEQID, "AE014075.1:190-252|dna");
-    EQ(gff_write(&gff), GFF_ILLEGALARG);
-
-    GFF_FEATURE_SET(feat, source, SOURCE, "iseq");
-    EQ(gff_write(&gff), GFF_ILLEGALARG);
-
-    GFF_FEATURE_SET(feat, type, TYPE, ".");
-    EQ(gff_write(&gff), GFF_ILLEGALARG);
-
-    GFF_FEATURE_SET(feat, start, START, "1");
-    EQ(gff_write(&gff), GFF_ILLEGALARG);
-
-    GFF_FEATURE_SET(feat, end, END, "63");
-    EQ(gff_write(&gff), GFF_ILLEGALARG);
-
-    GFF_FEATURE_SET(feat, score, SCORE, "0.0");
-    EQ(gff_write(&gff), GFF_ILLEGALARG);
-
-    GFF_FEATURE_SET(feat, strand, STRAND, "+");
-    EQ(gff_write(&gff), GFF_ILLEGALARG);
-
-    GFF_FEATURE_SET(feat, phase, PHASE, ".");
-    EQ(gff_write(&gff), GFF_ILLEGALARG);
-
-    GFF_FEATURE_SET(feat, attrs, ATTRS,
-                    "ID=item1;Target_alph=dna;Profile_name=Leader_Thr;Profile_"
-                    "alph=dna;Profile_acc=PF08254.12;Window=0;Bias=17.5;E-"
-                    "value=2.9e-14;Epsilon=0.01;Score=38.8");
+    COND(gff_set_version(&gff, "3.1.26"));
     EQ(gff_write(&gff), GFF_SUCCESS);
 
-    feat = gff_set_feature(&gff);
+    COND(gff_set_region(&gff, "ctg123", "1", "1497228"));
+    EQ(gff_write(&gff), GFF_SUCCESS);
 
-    GFF_FSET_SEQID(feat, "AE014075.1:534-908|dna");
-    GFF_FSET_SOURCE(feat, "iseq");
-    GFF_FSET_TYPE(feat, ".");
-    GFF_FSET_START(feat, "1");
-    GFF_FSET_END(feat, "306");
-    GFF_FSET_SCORE(feat, "0.0");
-    GFF_FSET_STRAND(feat, "+");
-    GFF_FSET_PHASE(feat, ".");
-    GFF_FSET_ATTRS(feat,
-                   "ID=item2;Target_alph=dna;Profile_name=Y1_Tnp;Profile_alph="
-                   "dna;Profile_acc=PF01797.17;Window=0;Bias=0.0;E-value=1.7e-"
-                   "29;Epsilon=0.01;Score=88.6");
+    struct gff_feature *feat = gff_set_feature(&gff);
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "gene");
+    gff_fset_start(feat, "1000");
+    gff_fset_end(feat, "9000");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, ".");
+    gff_fset_attrs(feat, "ID=gene00001;Name=EDEN");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "TF_binding_site");
+    gff_fset_start(feat, "1000");
+    gff_fset_end(feat, "1012");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, ".");
+    gff_fset_attrs(feat, "ID=tfbs00001;Parent=gene00001");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "mRNA");
+    gff_fset_start(feat, "1050");
+    gff_fset_end(feat, "9000");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, ".");
+    gff_fset_attrs(feat, "ID=mRNA00001;Parent=gene00001;Name=EDEN.1");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "mRNA");
+    gff_fset_start(feat, "1050");
+    gff_fset_end(feat, "9000");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, ".");
+    gff_fset_attrs(feat, "ID=mRNA00002;Parent=gene00001;Name=EDEN.2");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "mRNA");
+    gff_fset_start(feat, "1300");
+    gff_fset_end(feat, "9000");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, ".");
+    gff_fset_attrs(feat, "ID=mRNA00003;Parent=gene00001;Name=EDEN.3");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "exon");
+    gff_fset_start(feat, "1300");
+    gff_fset_end(feat, "1500");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, ".");
+    gff_fset_attrs(feat, "ID=exon00001;Parent=mRNA00003");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "exon");
+    gff_fset_start(feat, "1050");
+    gff_fset_end(feat, "1500");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, ".");
+    gff_fset_attrs(feat, "ID=exon00002;Parent=mRNA00001,mRNA00002");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "exon");
+    gff_fset_start(feat, "3000");
+    gff_fset_end(feat, "3902");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, ".");
+    gff_fset_attrs(feat, "ID=exon00003;Parent=mRNA00001,mRNA00003");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "exon");
+    gff_fset_start(feat, "5000");
+    gff_fset_end(feat, "5500");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, ".");
+    gff_fset_attrs(feat, "ID=exon00004;Parent=mRNA00001,mRNA00002,mRNA00003");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "exon");
+    gff_fset_start(feat, "7000");
+    gff_fset_end(feat, "9000");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, ".");
+    gff_fset_attrs(feat, "ID=exon00005;Parent=mRNA00001,mRNA00002,mRNA00003");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "1201");
+    gff_fset_end(feat, "1500");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "0");
+    gff_fset_attrs(feat, "ID=cds00001;Parent=mRNA00001;Name=edenprotein.1");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "3000");
+    gff_fset_end(feat, "3902");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "0");
+    gff_fset_attrs(feat, "ID=cds00001;Parent=mRNA00001;Name=edenprotein.1");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "5000");
+    gff_fset_end(feat, "5500");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "0");
+    gff_fset_attrs(feat, "ID=cds00001;Parent=mRNA00001;Name=edenprotein.1");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "7000");
+    gff_fset_end(feat, "7600");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "0");
+    gff_fset_attrs(feat, "ID=cds00001;Parent=mRNA00001;Name=edenprotein.1");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "1201");
+    gff_fset_end(feat, "1500");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "0");
+    gff_fset_attrs(feat, "ID=cds00002;Parent=mRNA00002;Name=edenprotein.2");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "5000");
+    gff_fset_end(feat, "5500");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "0");
+    gff_fset_attrs(feat, "ID=cds00002;Parent=mRNA00002;Name=edenprotein.2");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "7000");
+    gff_fset_end(feat, "7600");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "0");
+    gff_fset_attrs(feat, "ID=cds00002;Parent=mRNA00002;Name=edenprotein.2");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "3301");
+    gff_fset_end(feat, "3902");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "0");
+    gff_fset_attrs(feat, "ID=cds00003;Parent=mRNA00003;Name=edenprotein.3");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "5000");
+    gff_fset_end(feat, "5500");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "1");
+    gff_fset_attrs(feat, "ID=cds00003;Parent=mRNA00003;Name=edenprotein.3");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "7000");
+    gff_fset_end(feat, "7600");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "1");
+    gff_fset_attrs(feat, "ID=cds00003;Parent=mRNA00003;Name=edenprotein.3");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "3391");
+    gff_fset_end(feat, "3902");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "0");
+    gff_fset_attrs(feat, "ID=cds00004;Parent=mRNA00003;Name=edenprotein.4");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "5000");
+    gff_fset_end(feat, "5500");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "1");
+    gff_fset_attrs(feat, "ID=cds00004;Parent=mRNA00003;Name=edenprotein.4");
+    EQ(gff_write(&gff), GFF_SUCCESS);
+
+    gff_fset_seqid(feat, "ctg123");
+    gff_fset_source(feat, ".");
+    gff_fset_type(feat, "CDS");
+    gff_fset_start(feat, "7000");
+    gff_fset_end(feat, "7600");
+    gff_fset_score(feat, ".");
+    gff_fset_strand(feat, "+");
+    gff_fset_phase(feat, "1");
+    gff_fset_attrs(feat, "ID=cds00004;Parent=mRNA00003;Name=edenprotein.4");
     EQ(gff_write(&gff), GFF_SUCCESS);
 
     fclose(fd);
 
-    FILE *actual = fopen(TMPDIR "/example1.gff", "r");
-    FILE *desired = fopen(ASSETS "/example1.gff", "r");
+    FILE *actual = fopen(TMPDIR "/example4.gff", "r");
+    FILE *desired = fopen(ASSETS "/example4.gff", "r");
     NOTNULL(actual);
     NOTNULL(desired);
     EQ(actual, desired);

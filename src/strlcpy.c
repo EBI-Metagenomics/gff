@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-bool gff_strlcpy(char *dst, const char *src, size_t len)
+size_t gff_strlcpy(char *dst, const char *src, size_t len)
 {
     /* Besides quibbles over the return type (size_t versus int) and signal
      * handler safety (snprintf(3) is not entirely safe on some systems), the
@@ -21,5 +21,5 @@ bool gff_strlcpy(char *dst, const char *src, size_t len)
      * It is the caller's responsibility to handle this. */
     int n = snprintf(dst, len, "%s", src);
     assert(n >= 0);
-    return ((size_t)n) < len;
+    return (size_t)n;
 }

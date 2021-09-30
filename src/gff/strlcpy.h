@@ -5,6 +5,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-GFF_API bool gff_strlcpy(char *dst, const char *src, size_t len);
+GFF_API size_t gff_strlcpy(char *dst, const char *src, size_t len);
 
 #endif

@@ -64,7 +64,7 @@ enum gff_rc gff_write(struct gff *gff)
 
 enum gff_rc write_version(struct gff *gff)
 {
-    if (fprintf(gff->fd, "%s\n", "##gff-version 3") < 0)
+    if (fprintf(gff->fd, "##gff-version %s\n", gff->elem.version) < 0)
         return error_io(gff->error, errno);
     return GFF_SUCCESS;
 }
@@ -74,7 +74,9 @@ enum gff_rc write_version(struct gff *gff)
 enum gff_rc write_region(struct gff *gff, struct gff_region const *reg)
 {
     if (reg_write(name) < 0) return error_io(gff->error, errno);
+    if (fputc(' ', gff->fd) == EOF) return error_io(gff->error, errno);
     if (reg_write(start) < 0) return error_io(gff->error, errno);
+    if (fputc(' ', gff->fd) == EOF) return error_io(gff->error, errno);
     if (reg_write(end) < 0) return error_io(gff->error, errno);
     if (fputc('\n', gff->fd) == EOF) return error_io(gff->error, errno);
     return GFF_SUCCESS;
