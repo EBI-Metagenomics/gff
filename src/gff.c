@@ -73,6 +73,9 @@ enum gff_rc write_version(struct gff *gff)
 
 enum gff_rc write_region(struct gff *gff, struct gff_region const *reg)
 {
+    if (fprintf(gff->fd, "##sequence-region") < 0)
+        return error_io(gff->error, errno);
+    if (fputc(' ', gff->fd) == EOF) return error_io(gff->error, errno);
     if (reg_write(name) < 0) return error_io(gff->error, errno);
     if (fputc(' ', gff->fd) == EOF) return error_io(gff->error, errno);
     if (reg_write(start) < 0) return error_io(gff->error, errno);
