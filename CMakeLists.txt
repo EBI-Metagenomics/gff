@@ -15,7 +15,7 @@ if("${isSystemDir}" STREQUAL "-1")
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif()
 
-add_library(gff src/error.c src/gff.c src/fsm.c src/tok.c)
+add_library(gff src/error.c src/gff.c src/fsm.c src/tok.c src/strlcpy.c)
 add_library(GFF::gff ALIAS gff)
 
 # Hide functions by default.
