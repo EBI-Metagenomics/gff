@@ -3,6 +3,7 @@
 #include "fsm.h"
 #include "region.h"
 #include "tok.h"
+#include "unused.h"
 #include <errno.h>
 #include <string.h>
 
@@ -41,6 +42,7 @@ enum gff_rc gff_read(struct gff *gff)
     if (gff->state == STATE_END)
     {
         assert(initial_state == STATE_BEGIN || initial_state == STATE_PAUSE);
+        unused(initial_state);
         return GFF_ENDFILE;
     }
 
