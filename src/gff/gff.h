@@ -34,31 +34,10 @@ GFF_API void gff_clearerr(struct gff *gff);
 
 GFF_API enum gff_rc gff_write(struct gff *gff);
 
-static inline bool gff_set_version(struct gff *gff, char const *val)
-{
-    if (val == NULL)
-    {
-        gff->elem.type = GFF_ELEM_VERSION;
-        gff->elem.version[0] = '3';
-        gff->elem.version[1] = '\0';
-        return true;
-    }
-    size_t n = gff_strlcpy(gff->elem.version, val, GFF_VERSION_SIZE);
-    bool ok = n > 0 && n < GFF_VERSION_SIZE;
-    if (ok) gff->elem.type = GFF_ELEM_VERSION;
-    return ok;
-}
+GFF_API bool gff_set_version(struct gff *gff, char const *val);
 
-static inline bool gff_set_region(struct gff *gff, char const *name,
-                                  char const *start, char const *end)
-{
-    gff_region_init(&gff->elem.region);
-    if (!gff_rset_name(&gff->elem.region, name)) return false;
-    if (!gff_rset_start(&gff->elem.region, start)) return false;
-    bool ok = gff_rset_end(&gff->elem.region, end);
-    if (ok) gff->elem.type = GFF_ELEM_REGION;
-    return ok;
-}
+GFF_API bool gff_set_region(struct gff *gff, char const *name,
+                            char const *start, char const *end);
 
 static inline struct gff_feature *gff_set_feature(struct gff *gff)
 {

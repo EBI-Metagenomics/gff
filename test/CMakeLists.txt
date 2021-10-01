@@ -19,3 +19,4 @@ endfunction()
 
 gff_add_test(gff_read gff_read.c)
 gff_add_test(gff_write gff_write.c)
+gff_add_test(break break.c)

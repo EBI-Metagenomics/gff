@@ -39,53 +39,22 @@ static inline void gff_feature_init(struct gff_feature *feature)
     feature->attrs[0] = '\0';
 }
 
-#define GFF_FEATURE_SET(feat, field, FIELD, val)                               \
-    gff_strlcpy((feat)->field, val, GFF_FEATURE_##FIELD##_SIZE) <              \
-        GFF_FEATURE_##FIELD##_SIZE
+#define GFF_FEATURE_DEF(f, F)                                                  \
+    static inline bool gff_feature_set_##f(struct gff_feature *feat,           \
+                                           char const *val)                    \
+    {                                                                          \
+        size_t n = gff_strlcpy(feat->f, val, GFF_FEATURE_##F##_SIZE);          \
+        return 0 < n && n < GFF_FEATURE_##F##_SIZE;                            \
+    }
 
-static inline bool gff_fset_seqid(struct gff_feature *feat, char const *val)
-{
-    return GFF_FEATURE_SET(feat, seqid, SEQID, val);
-}
-
-static inline bool gff_fset_source(struct gff_feature *feat, char const *val)
-{
-    return GFF_FEATURE_SET(feat, source, SOURCE, val);
-}
-
-static inline bool gff_fset_type(struct gff_feature *feat, char const *val)
-{
-    return GFF_FEATURE_SET(feat, type, TYPE, val);
-}
-
-static inline bool gff_fset_start(struct gff_feature *feat, char const *val)
-{
-    return GFF_FEATURE_SET(feat, start, START, val);
-}
-
-static inline bool gff_fset_end(struct gff_feature *feat, char const *val)
-{
-    return GFF_FEATURE_SET(feat, end, END, val);
-}
-
-static inline bool gff_fset_score(struct gff_feature *feat, char const *val)
-{
-    return GFF_FEATURE_SET(feat, score, SCORE, val);
-}
-
-static inline bool gff_fset_strand(struct gff_feature *feat, char const *val)
-{
-    return GFF_FEATURE_SET(feat, strand, STRAND, val);
-}
-
-static inline bool gff_fset_phase(struct gff_feature *feat, char const *val)
-{
-    return GFF_FEATURE_SET(feat, phase, PHASE, val);
-}
-
-static inline bool gff_fset_attrs(struct gff_feature *feat, char const *val)
-{
-    return GFF_FEATURE_SET(feat, attrs, ATTRS, val);
-}
+GFF_FEATURE_DEF(seqid, SEQID);
+GFF_FEATURE_DEF(source, SOURCE);
+GFF_FEATURE_DEF(type, TYPE);
+GFF_FEATURE_DEF(start, START);
+GFF_FEATURE_DEF(end, END);
+GFF_FEATURE_DEF(score, SCORE);
+GFF_FEATURE_DEF(strand, STRAND);
+GFF_FEATURE_DEF(phase, PHASE);
+GFF_FEATURE_DEF(attrs, ATTRS);
 
 #endif

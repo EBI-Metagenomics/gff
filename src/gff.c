@@ -1,6 +1,7 @@
 #include "gff/gff.h"
 #include "error.h"
 #include "fsm.h"
+#include "region.h"
 #include "tok.h"
 #include <errno.h>
 #include <string.h>
@@ -47,6 +48,32 @@ enum gff_rc gff_read(struct gff *gff)
 }
 
 void gff_clearerr(struct gff *gff) { gff->error[0] = '\0'; }
+
+bool gff_set_version(struct gff *gff, char const *val)
+{
+    if (val == NULL)
+    {
+        gff->elem.type = GFF_ELEM_VERSION;
+        gff->elem.version[0] = '3';
+        gff->elem.version[1] = '\0';
+        return true;
+    }
+    size_t n = gff_strlcpy(gff->elem.version, val, GFF_VERSION_SIZE);
+    bool ok = n > 0 && n < GFF_VERSION_SIZE;
+    if (ok) gff->elem.type = GFF_ELEM_VERSION;
+    return ok;
+}
+
+bool gff_set_region(struct gff *gff, char const *name, char const *start,
+                    char const *end)
+{
+    gff_region_init(&gff->elem.region);
+    if (!region_set_name(&gff->elem.region, name)) return false;
+    if (!region_set_start(&gff->elem.region, start)) return false;
+    bool ok = region_set_end(&gff->elem.region, end);
+    if (ok) gff->elem.type = GFF_ELEM_REGION;
+    return ok;
+}
 
 enum gff_rc write_version(struct gff *gff);
 enum gff_rc write_region(struct gff *gff, struct gff_region const *region);
