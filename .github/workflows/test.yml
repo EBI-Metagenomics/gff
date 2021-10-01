@@ -1,6 +1,6 @@
 name: Test
 
-on: main 
+on: push
 
 env:
   BUILD_TYPE: Release
