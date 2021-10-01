@@ -13,7 +13,7 @@ enum gff_rc error(enum gff_rc rc, char *dst, char const *msg)
     int n = snprintf(dst, GFF_ERROR_SIZE, "%s %s", prefix[rc], msg);
     assert(0 < n && n < GFF_ERROR_SIZE);
     unused(n);
-    return GFF_ILLEGALARG;
+    return rc;
 }
 
 enum gff_rc error_io(char *dst, int errnum)
