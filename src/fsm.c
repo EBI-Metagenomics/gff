@@ -446,9 +446,9 @@ static enum gff_rc tokcpy0(char *dst, struct gff_tok *tok, size_t count,
 {
     *ptr = memccpy(dst, tok->value, '\0', count);
     if (!ptr)
-        return error_parse(tok->error, tok->line.number, "too long %s", name);
+        return error_parse(tok->error, tok->line.number, "too long value");
     if (*ptr - dst == 1)
-        return error_parse(tok->error, tok->line.number, "empty %s", name);
+        return error_parse(tok->error, tok->line.number, "empty value");
     return GFF_SUCCESS;
 }
 

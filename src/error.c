@@ -1,38 +1,16 @@
 #include "error.h"
 #include "gff/error.h"
 #include <assert.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-#define PARSE_ERROR "Parse error: "
-#define RUNTIME_ERROR "Runtime error: "
-#define LINE ": line"
+static char prefix[][20] = {
+    "", "", "IO error:", "Runtime error:", "Parse error:", "Illegal argument:"};
 
-static int copy_fmt(int dst_size, char *dst, char const *fmt, ...)
+enum gff_rc error(enum gff_rc rc, char *dst, char const *msg)
 {
-    va_list ap;
-    va_start(ap, fmt);
-    int n = vsnprintf(dst, (size_t)dst_size, fmt, ap);
-    va_end(ap);
-    assert(n >= 0);
-    return n;
-}
-
-static int copy_ap(int dst_size, char *dst, char const *fmt, va_list ap)
-{
-    int n = vsnprintf(dst, (size_t)dst_size, fmt, ap);
-    assert(n >= 0);
-    return n;
-}
-
-enum gff_rc error_illegalarg(char *dst, char const *fmt, ...)
-{
-    int n = copy_fmt(GFF_ERROR_SIZE, dst, RUNTIME_ERROR);
-    va_list ap;
-    va_start(ap, fmt);
-    copy_ap(GFF_ERROR_SIZE - n, dst + n, fmt, ap);
-    va_end(ap);
+    int n = snprintf(dst, GFF_ERROR_SIZE, "%s %s", prefix[rc], msg);
+    assert(0 < n && n < GFF_ERROR_SIZE);
     return GFF_ILLEGALARG;
 }
 
@@ -40,29 +18,19 @@ enum gff_rc error_illegalarg(char *dst, char const *fmt, ...)
 
 enum gff_rc error_io(char *dst, int errnum)
 {
-    int rc = strerror_r(errnum, dst, GFF_ERROR_SIZE);
+    char errstr[32] = {0};
+    int rc = strerror_r(errnum, errstr, GFF_ERROR_SIZE);
     assert(!rc);
     unused(rc);
+    int n = snprintf(dst, GFF_ERROR_SIZE, "%s %s", prefix[GFF_IOERROR], errstr);
+    assert(0 < n && n < GFF_ERROR_SIZE);
     return GFF_IOERROR;
 }
 
-enum gff_rc error_runtime(char *dst, char const *fmt, ...)
+enum gff_rc error_parse(char *dst, unsigned line, char const *msg)
 {
-    int n = copy_fmt(GFF_ERROR_SIZE, dst, RUNTIME_ERROR);
-    va_list ap;
-    va_start(ap, fmt);
-    copy_ap(GFF_ERROR_SIZE - n, dst + n, fmt, ap);
-    va_end(ap);
-    return GFF_RUNTIMEERROR;
-}
-
-enum gff_rc error_parse(char *dst, unsigned line, char const *fmt, ...)
-{
-    int n = copy_fmt(GFF_ERROR_SIZE, dst, PARSE_ERROR);
-    va_list ap;
-    va_start(ap, fmt);
-    n += copy_ap(GFF_ERROR_SIZE - n, dst + n, fmt, ap);
-    va_end(ap);
-    copy_fmt(GFF_ERROR_SIZE - n, dst + n, "%s %d", LINE, line);
+    int n = snprintf(dst, GFF_ERROR_SIZE, "%s %s: line %d",
+                     prefix[GFF_PARSEERROR], msg, line);
+    assert(0 < n && n < GFF_ERROR_SIZE);
     return GFF_PARSEERROR;
 }

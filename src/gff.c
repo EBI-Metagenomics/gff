@@ -23,7 +23,7 @@ enum gff_rc gff_read(struct gff *gff)
     if (gff->state == STATE_END) return GFF_ENDFILE;
 
     if (gff->state != STATE_BEGIN && gff->state != STATE_PAUSE)
-        return error_runtime(gff->error, "unexpected %s call", __func__);
+        return error(GFF_RUNTIMEERROR, gff->error, "unexpected gff_read call");
 
     gff_elem_init(&gff->elem);
     enum state initial_state = gff->state;
@@ -82,7 +82,7 @@ enum gff_rc write_feature(struct gff *gff, struct gff_feature const *feat);
 enum gff_rc gff_write(struct gff *gff)
 {
     if (!gff->version_written && gff->elem.type != GFF_ELEM_VERSION)
-        return error_illegalarg(gff->error, "write version first");
+        return error(GFF_ILLEGALARG, gff->error, "write version first");
 
     if (gff->elem.type == GFF_ELEM_REGION)
         return write_region(gff, &gff->elem.region);
@@ -91,7 +91,7 @@ enum gff_rc gff_write(struct gff *gff)
     else if (gff->elem.type == GFF_ELEM_VERSION)
         return write_version(gff);
 
-    return error_illegalarg(gff->error, "GFF_ELEM_UNKNOWN element type");
+    return error(GFF_ILLEGALARG, gff->error, "GFF_ELEM_UNKNOWN element type");
 }
 
 enum gff_rc write_version(struct gff *gff)
@@ -121,7 +121,7 @@ enum gff_rc write_region(struct gff *gff, struct gff_region const *reg)
 #define feat_write(field) fprintf(gff->fd, "%s", feat->field)
 #define check_empty(gff, feat, field)                                          \
     if (feat->field[0] == '\0')                                                \
-        return error_illegalarg(gff->error, "empty " #field);
+        return error(GFF_ILLEGALARG, gff->error, "empty " #field);
 
 enum gff_rc write_feature(struct gff *gff, struct gff_feature const *feat)
 {

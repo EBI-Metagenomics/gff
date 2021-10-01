@@ -404,7 +404,7 @@ void test_wrong_usage(void)
 
     COND(!gff_set_version(&gff, ""));
     EQ(gff_write(&gff), GFF_ILLEGALARG);
-    EQ(gff.error, "Runtime error: write version first");
+    EQ(gff.error, "Illegal argument: write version first");
     gff_clearerr(&gff);
     EQ(gff.error, "");
 
