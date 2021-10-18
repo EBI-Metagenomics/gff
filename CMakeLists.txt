@@ -35,7 +35,7 @@ target_compile_options(gff PRIVATE "-fverbose-asm")
 target_link_libraries(gff INTERFACE $<$<BOOL:${UNIX}>:m>)
 
 cbp_install(gff MERGED)
-install(FILES ${EXPORT_FILE} ${VERSION_FILE} DESTINATION include/gff)
+install(FILES ${EXPORT_FILE} DESTINATION include/gff)
 
 enable_testing()
 add_subdirectory(test)
